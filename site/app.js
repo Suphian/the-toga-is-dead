@@ -87,6 +87,7 @@ import { createGameLibrary } from './game-library.js';
     $('#app').innerHTML=`
     <div class="app-shell">
       <header class="topbar">
+        <a class="suph-wordmark" href="/" aria-label="Suph.app home">suph.</a>
         <button class="brand" data-command="menu" aria-label="Open the kingdom menu">${emblem('crown')}<span class="brand-name"><strong id="brand-title">THE TOGA IS DEAD</strong><small>A KINGDOM WITHOUT A CROWN</small></span></button>
         <div class="your-seat" id="your-seat" aria-label="Your player identity"></div>
         <nav class="header-actions" aria-label="Game controls">

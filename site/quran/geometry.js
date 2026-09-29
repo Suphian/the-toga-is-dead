@@ -92,62 +92,56 @@
       return { d, verse: records[i].verse_number };
     });
 
-    // Fourier Bloom: low spatial frequencies of the standardized word sequence.
-    const K = Math.min(12, Math.floor((N - 1) / 2));
-    const coefficients = [];
-    for (let k = 1; k <= K; k++) {
-      let re = 0, im = 0;
-      if (sd > 1e-12) for (let j = 0; j < N; j++) {
-        const u = (lengths[j] - mean) / sd, phase = TAU * k * j / N;
-        re += u * Math.cos(phase) / N; im -= u * Math.sin(phase) / N;
+    // Verse Lines: centered line lengths directly encode each verse's letters.
+    const lineBounds = bounds();
+    const lineEndpoints = records.map((verse, i) => {
+      const start = { x: -3 * verse.L, y: 12 * i };
+      const end = { x: 3 * verse.L, y: 12 * i };
+      include(lineBounds, start); include(lineBounds, end);
+      return { start, end };
+    });
+    const lineFit = fit(lineBounds);
+    const lineSpacing = 12 * lineFit.scale;
+    const lineWidth = Math.max(.45, Math.min(1.6, .65 * lineSpacing));
+    const lineRows = lineEndpoints.map((row, i) => ({
+      d: polyline([lineFit.point(row.start), lineFit.point(row.end)]), verse: records[i].verse_number
+    }));
+    // Word boundaries are decorative one-pixel breaks, shown only where the
+    // words on both sides are at least three SVG pixels wide after fitting.
+    const lineTicks = records.map((verse, i) => {
+      let cumulative = 0;
+      const segments = [];
+      for (let word = 0; word < verse.word_lengths.length - 1; word++) {
+        cumulative += verse.word_lengths[word];
+        if (6 * Math.min(verse.word_lengths[word], verse.word_lengths[word + 1]) * lineFit.scale < 3) continue;
+        const p = lineFit.point({ x: -3 * verse.L + 6 * cumulative, y: 12 * i });
+        const halfHeight = (lineWidth + 1.4) / 2;
+        segments.push(`M${fmt(p.x)},${fmt(p.y - halfHeight)} L${fmt(p.x)},${fmt(p.y + halfHeight)}`);
       }
-      coefficients.push({ k, re, im, magnitude: Math.hypot(re, im) });
-    }
-    const B = 2 * coefficients.reduce((sum, c) => sum + c.magnitude, 0);
-    function bloomRadius(theta, modes = K) {
-      if (B < 1e-12) return 100;
-      let value = 0;
-      for (let i = 0; i < modes; i++) { const c = coefficients[i]; value += 2 * (c.re * Math.cos(c.k * theta) - c.im * Math.sin(c.k * theta)); }
-      return 100 * (1 + .7 * value / B);
-    }
-    function rawBloomPoint(theta, modes = K) { const r = bloomRadius(theta, modes); return { x: r * Math.cos(theta), y: r * Math.sin(theta) }; }
-    const bloomBounds = bounds();
-    const bloomSamples = 1440;
-    const partials = [];
-    for (let modes = 1; modes < K; modes++) {
-      partials.push(Array.from({ length: bloomSamples + 1 }, (_, i) => { const p = rawBloomPoint(TAU * i / bloomSamples, modes); include(bloomBounds, p); return p; }));
-    }
-    const bloomContour = Array.from({ length: bloomSamples + 1 }, (_, i) => { const p = rawBloomPoint(TAU * i / bloomSamples); include(bloomBounds, p); return p; });
-    const bloomFit = fit(bloomBounds, true);
-    const bloomPoint = theta => bloomFit.point(rawBloomPoint(theta));
-    const bloomSegment = (startAngle, endAngle) => {
-      const steps = Math.max(2, Math.ceil(Math.abs(endAngle - startAngle) / TAU * bloomSamples));
-      return polyline(Array.from({ length: steps + 1 }, (_, i) => bloomPoint(startAngle + (endAngle - startAngle) * i / steps)));
-    };
-    const bloomPath = polyline(bloomContour.map(bloomFit.point), true);
-    const bloomLayers = partials.map((points, i) => ({ d: polyline(points.map(bloomFit.point), true), modes: i + 1 }));
-    const result = { records, lengths, mean, sd, shellPaths, currentPaths, bloomPath, bloomLayers, bloomPoint, bloomSegment, bloomRadius, wordStarts, N, K, B, coefficients, currentEnd: position, currentHeading: heading, currentArcs, verseArcs, currentBounds, currentFit, shellBounds, shellFit, bloomBounds, bloomFit };
+      return { d: segments.join(' '), verse: verse.verse_number };
+    });
+    const result = { records, lengths, mean, sd, shellPaths, currentPaths, lineRows, lineTicks, lineEndpoints, lineBounds, lineFit, lineSpacing, lineWidth, wordStarts, N, currentEnd: position, currentHeading: heading, currentArcs, verseArcs, currentBounds, currentFit, shellBounds, shellFit };
     cache.set(chapter, result);
     if (cache.size > 8) cache.delete(cache.keys().next().value);
     return result;
   }
 
   function markup(chapter, kind, options = {}) {
-    if (!['shell', 'current', 'bloom'].includes(kind)) throw new Error('Unknown artwork method.');
+    if (!['shell', 'current', 'lines'].includes(kind)) throw new Error('Unknown artwork method.');
     const g = build(chapter);
     const selected = Number(options.selected || 0);
     const hasSelection = selected >= 1 && selected <= g.records.length;
-    const label = { shell: 'Verse Shell', current: 'Word Current', bloom: 'Fourier Bloom' }[kind];
+    const label = { shell: 'Verse Shell', current: 'Word Current', lines: 'Verse Lines' }[kind];
     const metadata = { surah: chapter.id, name: chapter.name, method: label, words: g.N, letters: g.lengths.reduce((a, b) => a + b, 0), selectedVerse: hasSelection ? `${chapter.id}:${selected}` : null,
-      mapping: kind === 'shell' ? 'R=40+2L; A=.25*sigma/(mu+sigma); r=R(1+A*cos(W*theta)); phi=2*pi*(i-1)/V; z=12*(i-1); projection=(x,.42*y-.907*(z-6*(V-1)))' : kind === 'current' ? 's=10*length; delta=(3*pi/4)*tanh((length-globalMean)/globalSD); exact circular arcs in word order from (0,0), heading 0; zero SD gives straight lines' : 'u=(length-globalMean)/globalSD; c_k=mean(u_j*exp(-2*pi*i*k*j/N)); K=min(12,floor((N-1)/2)); f=2*Re(sum(c_k*exp(i*k*theta))); B=2*sum(abs(c_k)); r=100*(1+.7*f/B); zero B gives circle; faint contours are partial sums with the full B',
+      mapping: kind === 'shell' ? 'R=40+2L; A=.25*sigma/(mu+sigma); r=R(1+A*cos(W*theta)); phi=2*pi*(i-1)/V; z=12*(i-1); projection=(x,.42*y-.907*(z-6*(V-1)))' : kind === 'current' ? 's=10*length; delta=(3*pi/4)*tanh((length-globalMean)/globalSD); exact circular arcs in word order from (0,0), heading 0; zero SD gives straight lines' : 'For verse index i starting at 0, L=sum(word lengths); centered endpoints=(-3L,12i),(+3L,12i), so length=6L; uniformly fit all endpoints into [40,560]x[30,450], retaining length ratios; row stroke width=max(.45,min(1.6,.65*12*fitScale)); word boundaries at x=-3L+6*cumulativeWordLength are decorative paper-color breaks of width1 and height(rowStrokeWidth+1.4), drawn only when both neighboring words are at least3 SVG pixels wide; highlight selected verse in copper with width2.5; one verse remains a centered horizontal line',
       source: 'https://api.quran.com/api/v4/quran/verses/uthmani', counting: 'Unicode whitespace words; Unicode L letters except U+0640/U+06E5/U+06E6; no normalization' };
     let content = options.background === false ? '' : '<rect width="600" height="480" fill="#f8f5ec"/>';
     content += '<g fill="none" stroke-linecap="round" stroke-linejoin="round">';
     const path = (d, stroke, width, opacity, verse) => `<path d="${d}" stroke="${stroke}" stroke-width="${width}" stroke-opacity="${opacity}"${verse ? ` data-verse="${verse}"` : ''}/>`;
-    if (kind === 'bloom') {
-      for (const layer of g.bloomLayers) content += path(layer.d, '#355c55', .8, .18);
-      content += path(g.bloomPath, '#355c55', 1.8, .88);
-      if (hasSelection) content += path(g.bloomSegment(TAU * g.wordStarts[selected - 1] / g.N, TAU * g.wordStarts[selected] / g.N), '#a96736', 3.2, 1, selected);
+    if (kind === 'lines') {
+      for (const row of g.lineRows) content += path(row.d, '#355c55', g.lineWidth, .78, row.verse);
+      for (const tick of g.lineTicks) if (tick.d) content += path(tick.d, '#f8f5ec', 1, 1, tick.verse);
+      if (hasSelection) content += path(g.lineRows[selected - 1].d, '#a96736', 2.5, 1, selected);
     } else {
       const paths = kind === 'shell' ? g.shellPaths : g.currentPaths;
       for (const p of paths) content += path(p.d, '#355c55', kind === 'shell' ? 1.05 : 1.6, kind === 'shell' ? .58 : .78, p.verse);

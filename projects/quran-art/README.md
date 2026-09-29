@@ -1,8 +1,8 @@
 # Quran Art
 
-Three numerical interpretations of every surah: **114 surahs and 342 artworks**. The gallery lives at `/quran`; each surah has a named detail page such as `/surah/al-fajr`. The detail pages share a verse selector and explain the theory behind each approach in expandable sections.
+Three numerical interpretations of every surah: **114 surahs and 342 artworks**. The gallery lives at `/quran`; each surah has a named detail page such as `/surah/al-fajr`. The detail pages share a verse selector and explain the theory behind each approach in sections that open by default.
 
-This directory contains the source and saved text data. The generated public files are in `../../site/quran/` and `../../site/surah/`. They are a self-contained addition to the existing static site. The Toga game remains at `/`.
+This directory contains the source and saved text data. The generated public files are in `../../site/quran/` and `../../site/surah/`. They are a self-contained addition to the existing static site. The Toga game remains at `/Toga`.
 
 ## Regenerate
 
@@ -29,12 +29,12 @@ Only numbered verses are used. This includes the basmala at 1:1 and within 27:30
 
 ## Three mappings
 
-The same mappings used for the Al-Fajr studies are applied to every surah. The constants set the visual style and do not assert hidden numerical meaning. `geometry.js` is shared by the generator and browser, so exports and interactive views use one implementation. Each artwork is fitted uniformly to its own frame; displayed size does not compare surah lengths.
+The same mapping rules are applied to every surah. The constants set the visual style and do not assert hidden numerical meaning. `geometry.js` is shared by the generator and browser, so exports and interactive views use one implementation. Each artwork is fitted uniformly to its own frame; displayed size does not compare surah lengths.
 
 **Verse Shell.** A verse with W words, L letters, mean word length μᵥ and spread σᵥ becomes a rippled ring: R = 40 + 2L, A = 0.25σᵥ/(μᵥ + σᵥ), and r(θ) = R[1 + A cos(Wθ)]. For verse i of V, rotation is 2π(i − 1)/V and height is 12(i − 1). The display projects y to 0.42y − 0.907[z − 6(V − 1)]. Generalizing the stack's rotation and center to V preserves the original Al-Fajr geometry at V = 30.
 
 **Word Current.** Read the entire surah's word lengths in order, with global mean μ and spread σ. A word of length ℓ draws a circular arc of length s = 10ℓ and signed turn Δ = (3π/4)tanh[(ℓ − μ)/σ]. The path begins at (0, 0), facing right; each arc continues with the preceding arc's end position and heading. A zero turn is straight. If σ = 0, the whole path is straight. The path is tangent-continuous and is not forced closed.
 
-**Fourier Bloom.** Standardize the N word lengths as uⱼ = (ℓⱼ − μ)/σ and compute cₖ = (1/N)Σⱼuⱼexp(−2πikj/N). Retain K = min(12, floor((N − 1)/2)) harmonics; let f(θ) = 2 Re Σₖcₖexp(ikθ) and B = 2Σₖ|cₖ|. The contour uses r(θ) = 100[1 + 0.70f(θ)/B]. Faint contours show successive harmonic sums using the same B. A constant signal becomes a circle. This deliberately treats the word sequence as periodic and smooths it; it is not an exact reconstruction of all lengths. The selected copper interval marks a verse's position in the sequence, while every word affects the entire contour.
+**Verse Lines.** Each ayah is one centered horizontal line. A verse with L retained letters spans x = −3L to +3L at y = 12(i − 1). A uniform scale fits the entire surah; relative lengths therefore remain proportional to letter counts. Subtle word-boundary marks reveal word grouping where space permits. The selected verse’s whole line is highlighted in copper. This replaces the earlier Fourier Bloom study.
 
 The mathematical geometry is deterministic. No AI-generated artwork or external image assets are used in this gallery.

@@ -111,6 +111,6 @@ CI checks JavaScript syntax, runs Node tests, and runs the browser verification 
 
 ## Quran Art
 
-The Quran gallery lives at `/quran`, with a page for each surah at `/surah/{name}` (for example `/surah/al-fajr`). Each page compares Verse Shell, Word Current, and Fourier Bloom, with linked verse highlighting, expandable mathematics, and SVG downloads. All 114 surahs and 342 artworks are included.
+The Quran gallery lives at `/quran`, with a page for each surah at `/surah/{name}` (for example `/surah/al-fajr`). Each page compares Verse Shell, Word Current, and Verse Lines, with linked verse highlighting, expandable mathematics, and SVG downloads. All 114 surahs and 342 artworks are included.
 
 Source, provenance, and regeneration instructions are in [`projects/quran-art/README.md`](projects/quran-art/README.md). Public output is isolated in `site/quran/` and `site/surah/`; the Toga game is unchanged.

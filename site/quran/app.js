@@ -1,7 +1,7 @@
 'use strict';
 (() => {
   const byId = id => document.getElementById(id);
-  const kinds = ['shell', 'current', 'bloom'];
+  const kinds = ['shell', 'current', 'lines'];
   if (document.body.dataset.page === 'gallery') {
     const cards = [...document.querySelectorAll('.surah-card')];
     const setMode = kind => {
@@ -9,7 +9,7 @@
       cards.forEach(card => {
         const img = card.querySelector('img');
         img.src = `/quran/thumbs/${card.dataset.id}-${kind}.png`;
-        img.alt = `${card.dataset.name}: ${kind === 'shell' ? 'Verse Shell' : kind === 'current' ? 'Word Current' : 'Fourier Bloom'}`;
+        img.alt = `${card.dataset.name}: ${kind === 'shell' ? 'Verse Shell' : kind === 'current' ? 'Word Current' : 'Verse Lines'}`;
       });
     };
     document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => setMode(button.dataset.kind)));
@@ -40,8 +40,8 @@
         const group = container.querySelector('svg > g');
         group.lastElementChild.remove();
         const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-        const d = kind === 'shell' ? model.shellPaths[selected-1].d : kind === 'current' ? model.currentPaths[selected-1].d : model.bloomSegment(2*Math.PI*model.wordStarts[selected-1]/model.N,2*Math.PI*model.wordStarts[selected]/model.N);
-        for (const [key,value] of Object.entries({d,stroke:'#a96736','stroke-width':kind==='shell'?2.8:kind==='current'?3.5:3.2,'data-verse':selected})) path.setAttribute(key,value);
+        const d = kind === 'shell' ? model.shellPaths[selected-1].d : kind === 'current' ? model.currentPaths[selected-1].d : model.lineRows[selected-1].d;
+        for (const [key,value] of Object.entries({d,stroke:'#a96736','stroke-width':kind==='shell'?2.8:kind==='current'?3.5:2.5,'data-verse':selected})) path.setAttribute(key,value);
         group.append(path);
         container.querySelector('desc').textContent = `${chapter.name}: verse ${selected} highlighted.`;
       }
@@ -68,14 +68,14 @@
     }));
     byId('shell-values').textContent = `Verse ${selected}: ${record.W} words, ${record.L} letters. R = ${record.R}; A = ${record.A.toFixed(4)}.`;
     byId('current-values').textContent = `Across this surah: μ = ${model.mean.toFixed(3)} letters; σ = ${model.sd.toFixed(3)}. The path contains ${model.N.toLocaleString()} word arcs.`;
-    byId('bloom-values').textContent = `This surah uses ${model.K} harmonics from ${model.N.toLocaleString()} words.`;
+    byId('lines-values').textContent = `Verse ${selected}: ${record.L} letters → a line ${6*record.L} units long.`;
   };
   byId('verse-range').addEventListener('input', event => { selected = Number(event.target.value); render(); });
   byId('previous-verse').addEventListener('click', () => {selected = Math.max(1, selected - 1); render();});
   byId('next-verse').addEventListener('click', () => {selected = Math.min(chapter.verses.length, selected + 1); render();});
   byId('surah-select').addEventListener('change', event => {location.href = `/surah/${event.target.value}`;});
   kinds.forEach(kind => byId(`${kind}-art`).addEventListener('click', () => {
-    byId('dialog-title').textContent = `${chapter.name} · ${{shell:'Verse Shell',current:'Word Current',bloom:'Fourier Bloom'}[kind]}`;
+    byId('dialog-title').textContent = `${chapter.name} · ${{shell:'Verse Shell',current:'Word Current',lines:'Verse Lines'}[kind]}`;
     byId('dialog-art').innerHTML = geometry.markup(chapter,kind,{selected,background:false});
     byId('art-dialog').showModal();
   }));
