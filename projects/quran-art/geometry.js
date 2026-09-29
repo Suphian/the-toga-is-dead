@@ -5,26 +5,50 @@
   if (typeof window !== 'undefined') window.QuranGeometry = api;
 })(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
+  // One rule, three arrangements. One letter is one unit of line; every word
+  // boundary is a small break carved out of the ink. Rays, Rows and Spiral
+  // differ only in how that line is arranged inside a square frame.
   const TAU = 2 * Math.PI;
-  const HALF_PI = Math.PI / 2;
+  const CENTER = 300, RADIUS = 260, AREA = 520; // 600 frame, 40 margin
+  const palette = { paper: '#f8f5ec', ink: '#355c55', accent: '#a96736' };
+  const studies = [
+    { key: 'rays', name: 'Rays' },
+    { key: 'rows', name: 'Rows' },
+    { key: 'spiral', name: 'Spiral' }
+  ];
+  // Presentation constants. They set stroke, break and swell sizes; none of
+  // them changes a length ratio.
+  const style = {
+    gapFraction: .45, gapMax: 4, gapMinUnit: 2,        // break = .45u capped at 4px, only when a letter is >= 2px
+    strokeFactor: .55, strokeMin: .5, strokeMax: 1.8,  // stroke = clamp(.55 * local spacing, .5, 1.8)
+    highlightFactor: 2, highlightMin: 2.4,
+    rowPitch: 2.4,                                     // letter units between rows
+    rayInner: .19, rayInnerMin: 24, rayInnerMax: 70,   // inner circle radius from verse count
+    spiralTurnsDivisor: 16, spiralTurnsMin: 1.25, spiralTurnsMax: 40,
+    spiralInner: .5, swell: .35, swellSlope: .2, swellMin: .25, minPaper: .8,
+    chordTolerance: .08, sampleMin: 1, sampleMax: 4
+  };
   const cache = new Map();
-  const fmt = n => String(Number(n.toFixed(3)));
+  const fmt = n => String(Number(n.toFixed(2)));
   const escape = text => String(text).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
-  const bounds = () => ({ minX: Infinity, maxX: -Infinity, minY: Infinity, maxY: -Infinity });
-  function include(b, p) {
-    b.minX = Math.min(b.minX, p.x); b.maxX = Math.max(b.maxX, p.x);
-    b.minY = Math.min(b.minY, p.y); b.maxY = Math.max(b.maxY, p.y);
+  const clamp = (value, low, high) => Math.min(high, Math.max(low, value));
+  const strokeFor = spacing => clamp(style.strokeFactor * spacing, style.strokeMin, style.strokeMax);
+  const highlightFor = width => Math.max(style.highlightFactor * width, style.highlightMin);
+  const gapFor = unit => unit >= style.gapMinUnit ? Math.min(style.gapMax, style.gapFraction * unit) : 0;
+  const segment = (a, b) => `M${fmt(a.x)},${fmt(a.y)}L${fmt(b.x)},${fmt(b.y)}`;
+  // Distances along a verse's line where each word's ink starts and ends.
+  // Breaks are taken from the ink on both sides of a boundary, so the spans
+  // still add up to exactly L * unit.
+  function wordSpans(wordLengths, unit, gap) {
+    if (!gap || wordLengths.length === 1) return [[0, wordLengths.reduce((a, b) => a + b, 0) * unit]];
+    const spans = []; let position = 0; const last = wordLengths.length - 1;
+    wordLengths.forEach((length, k) => {
+      spans.push([position + (k > 0 ? gap / 2 : 0), position + length * unit - (k < last ? gap / 2 : 0)]);
+      position += length * unit;
+    });
+    return spans;
   }
-  function fit(b, invertY = false) {
-    const width = b.maxX - b.minX, height = b.maxY - b.minY;
-    const scale = Math.min(width > 1e-12 ? 520 / width : Infinity, height > 1e-12 ? 420 / height : Infinity);
-    const actualScale = Number.isFinite(scale) ? scale : 1;
-    const cx = (b.minX + b.maxX) / 2, cy = (b.minY + b.maxY) / 2;
-    return { scale: actualScale, point: p => ({ x: 300 + (p.x - cx) * actualScale, y: 240 + (invertY ? -1 : 1) * (p.y - cy) * actualScale }) };
-  }
-  function polyline(points, close = false) {
-    return points.map((p, i) => `${i ? 'L' : 'M'}${fmt(p.x)},${fmt(p.y)}`).join(' ') + (close ? ' Z' : '');
-  }
+
   function build(chapter) {
     if (cache.has(chapter)) {
       const value = cache.get(chapter); cache.delete(chapter); cache.set(chapter, value); return value;
@@ -34,121 +58,131 @@
     const lengths = chapter.verses.flatMap(v => v.word_lengths);
     const N = lengths.length;
     if (!N || lengths.some(n => !Number.isFinite(n) || n <= 0)) throw new Error('Word lengths must be positive finite numbers.');
-    const mean = lengths.reduce((a, b) => a + b, 0) / N;
+    const S = lengths.reduce((a, b) => a + b, 0);
+    const mean = S / N;
     const sd = Math.sqrt(lengths.reduce((a, n) => a + (n - mean) ** 2, 0) / N);
-    const records = chapter.verses.map((verse, index) => {
+    const records = chapter.verses.map(verse => {
       const W = verse.word_lengths.length, L = verse.word_lengths.reduce((a, b) => a + b, 0);
-      const mean = L / W;
-      const sd = Math.sqrt(verse.word_lengths.reduce((a, n) => a + (n - mean) ** 2, 0) / W);
-      return { ...verse, W, L, mean, sd, R: 40 + 2 * L, A: .25 * sd / (mean + sd), phi: TAU * index / V, z: 12 * index };
+      const verseMean = L / W;
+      const verseSd = Math.sqrt(verse.word_lengths.reduce((a, n) => a + (n - verseMean) ** 2, 0) / W);
+      return { ...verse, W, L, mean: verseMean, sd: verseSd };
+    });
+    const Lmax = Math.max(...records.map(r => r.L));
+
+    // Rays: one straight ray per verse from a small inner circle. Verse 1
+    // points up; later verses follow counter-clockwise on screen.
+    const r0 = clamp(style.rayInner * V, style.rayInnerMin, style.rayInnerMax);
+    const rayUnit = (RADIUS - r0) / Lmax;
+    const rayGap = gapFor(rayUnit);
+    const raySpacing = TAU * r0 / V;
+    const rayStroke = strokeFor(raySpacing);
+    const rays = records.map((verse, i) => {
+      const theta = Math.PI / 2 + TAU * i / V, dx = Math.cos(theta), dy = -Math.sin(theta);
+      const at = distance => ({ x: CENTER + (r0 + distance) * dx, y: CENTER + (r0 + distance) * dy });
+      return { d: wordSpans(verse.word_lengths, rayUnit, rayGap).map(([a, e]) => segment(at(a), at(e))).join(''), verse: verse.verse_number };
     });
 
-    // Verse Shell: verse statistics create rippled rings in a tilted stack.
-    const shellBounds = bounds();
-    const contours = records.map(verse => {
-      const steps = Math.max(720, 12 * verse.W);
-      return Array.from({ length: steps + 1 }, (_, i) => {
-        const theta = TAU * i / steps;
-        const r = verse.R * (1 + verse.A * Math.cos(verse.W * theta));
-        const p = { x: r * Math.cos(theta + verse.phi), y: .42 * r * Math.sin(theta + verse.phi) - .907 * (verse.z - 6 * (V - 1)) };
-        include(shellBounds, p); return p;
-      });
+    // Rows: one horizontal row per verse, stacked in order and aligned to the
+    // right edge where reading begins. A uniform fit keeps every length ratio.
+    const rowUnit = Math.min(AREA / Lmax, V > 1 ? AREA / (style.rowPitch * (V - 1)) : Infinity);
+    const pitch = style.rowPitch * rowUnit;
+    const rowGap = gapFor(rowUnit);
+    const rowStroke = strokeFor(pitch);
+    const right = CENTER + Lmax * rowUnit / 2, top = CENTER - (V - 1) * pitch / 2;
+    const rows = records.map((verse, i) => {
+      const y = top + i * pitch;
+      return { d: wordSpans(verse.word_lengths, rowUnit, rowGap).map(([a, e]) => segment({ x: right - a, y }, { x: right - e, y })).join(''), verse: verse.verse_number };
     });
-    const shellFit = fit(shellBounds);
-    const shellPaths = contours.map((points, i) => ({ d: polyline(points.map(shellFit.point), true), verse: records[i].verse_number }));
 
-    // Word Current: exact circular arcs preserve reading order and tangency.
-    let position = { x: 0, y: 0 }, heading = 0;
-    const currentBounds = bounds(); include(currentBounds, position);
-    const currentArcs = [], wordStarts = [0];
-    const verseArcs = records.map(verse => {
-      const arcs = verse.word_lengths.map((length, index) => {
-        const s = 10 * length;
-        const delta = sd > 1e-12 ? 3 * Math.PI / 4 * Math.tanh((length - mean) / sd) : 0;
-        const start = { ...position }, h = heading;
-        const pointAt = t => Math.abs(delta) < 1e-12
-          ? { x: start.x + t * s * Math.cos(h), y: start.y + t * s * Math.sin(h) }
-          : { x: start.x + s / delta * (Math.sin(h + t * delta) - Math.sin(h)), y: start.y + s / delta * (Math.cos(h) - Math.cos(h + t * delta)) };
-        const end = pointAt(1);
-        const arc = { verse: verse.verse_number, word: index + 1, length, s, delta, h, start, end, pointAt };
-        include(currentBounds, start); include(currentBounds, end);
-        if (Math.abs(delta) >= 1e-12) {
-          const low = Math.min(h, h + delta), high = Math.max(h, h + delta);
-          for (let n = Math.ceil(low / HALF_PI); n <= Math.floor(high / HALF_PI); n++) include(currentBounds, pointAt((n * HALF_PI - h) / delta));
+    // Spiral: the whole surah as one Archimedean spiral r = r0 + b*theta,
+    // read from the centre outward, one letter per unit of arc. Turns grow
+    // with the square root of the letter count so ink density stays even.
+    const turns = clamp(Math.sqrt(S / style.spiralTurnsDivisor), style.spiralTurnsMin, style.spiralTurnsMax);
+    const p = (RADIUS - style.strokeMax / 2) / (turns + style.spiralInner + style.swell);
+    const inner = style.spiralInner * p, b = p / TAU, outer = inner + p * turns;
+    const spiralStroke = strokeFor(p);
+    const arcLength = r => (r * Math.hypot(r, b) + b * b * Math.asinh(r / b)) / (2 * b); // exact, for r = b*theta
+    const arcStart = arcLength(inner);
+    const length = arcLength(outer) - arcStart;
+    const spiralUnit = length / S;
+    const spiralGap = gapFor(spiralUnit);
+    const amplitude = Math.max(0, Math.min(style.swell * p, (p - spiralStroke - style.minPaper) / 2));
+    const radiusAt = s => {
+      let r = Math.sqrt(inner * inner + 2 * b * s);
+      for (let k = 0; k < 3; k++) r -= (arcLength(r) - arcStart - s) * b / Math.hypot(r, b);
+      return r;
+    };
+    const point = (s, offset) => {
+      const r = radiusAt(s), theta = Math.PI / 2 + (r - inner) / b, radius = r + offset;
+      return { x: CENTER + radius * Math.cos(theta), y: CENTER - radius * Math.sin(theta) };
+    };
+    let position = 0;
+    const spiral = records.map(verse => {
+      let d = '';
+      const last = verse.word_lengths.length - 1;
+      verse.word_lengths.forEach((wordLength, k) => {
+        const start = position, arc = wordLength * spiralUnit;
+        const from = start + (spiralGap && k > 0 ? spiralGap / 2 : 0);
+        const to = start + arc - (spiralGap && k < last ? spiralGap / 2 : 0);
+        let swell = sd > 1e-12 ? Math.tanh((wordLength - mean) / sd) * Math.min(amplitude, style.swellSlope * arc) : 0;
+        if (Math.abs(swell) < style.swellMin) swell = 0;
+        let s = from, first = spiralGap ? true : k === 0;
+        for (;;) {
+          const q = point(s, swell * Math.sin(Math.PI * (s - start) / arc) ** 2);
+          d += (first ? 'M' : 'L') + fmt(q.x) + ',' + fmt(q.y);
+          first = false;
+          if (s >= to - 1e-9) break;
+          s = Math.min(to, s + clamp(Math.sqrt(8 * radiusAt(s) * style.chordTolerance), style.sampleMin, style.sampleMax));
         }
-        position = end; heading += delta; currentArcs.push(arc); return arc;
+        position = start + arc;
       });
-      wordStarts.push(currentArcs.length); return arcs;
-    });
-    const currentFit = fit(currentBounds, true);
-    const currentPaths = verseArcs.map((arcs, i) => {
-      const start = currentFit.point(arcs[0].start);
-      const d = `M${fmt(start.x)},${fmt(start.y)} ` + arcs.map(arc => {
-        const end = currentFit.point(arc.end);
-        if (Math.abs(arc.delta) < 1e-12) return `L${fmt(end.x)},${fmt(end.y)}`;
-        const r = Math.abs(arc.s / arc.delta) * currentFit.scale;
-        return `A${fmt(r)},${fmt(r)} 0 0 ${arc.delta > 0 ? 0 : 1} ${fmt(end.x)},${fmt(end.y)}`;
-      }).join(' ');
-      return { d, verse: records[i].verse_number };
+      return { d, verse: verse.verse_number };
     });
 
-    // Verse Lines: centered line lengths directly encode each verse's letters.
-    const lineBounds = bounds();
-    const lineEndpoints = records.map((verse, i) => {
-      const start = { x: -3 * verse.L, y: 12 * i };
-      const end = { x: 3 * verse.L, y: 12 * i };
-      include(lineBounds, start); include(lineBounds, end);
-      return { start, end };
-    });
-    const lineFit = fit(lineBounds);
-    const lineSpacing = 12 * lineFit.scale;
-    const lineWidth = Math.max(.45, Math.min(1.6, .65 * lineSpacing));
-    const lineRows = lineEndpoints.map((row, i) => ({
-      d: polyline([lineFit.point(row.start), lineFit.point(row.end)]), verse: records[i].verse_number
-    }));
-    // Word boundaries are decorative one-pixel breaks, shown only where the
-    // words on both sides are at least three SVG pixels wide after fitting.
-    const lineTicks = records.map((verse, i) => {
-      let cumulative = 0;
-      const segments = [];
-      for (let word = 0; word < verse.word_lengths.length - 1; word++) {
-        cumulative += verse.word_lengths[word];
-        if (6 * Math.min(verse.word_lengths[word], verse.word_lengths[word + 1]) * lineFit.scale < 3) continue;
-        const p = lineFit.point({ x: -3 * verse.L + 6 * cumulative, y: 12 * i });
-        const halfHeight = (lineWidth + 1.4) / 2;
-        segments.push(`M${fmt(p.x)},${fmt(p.y - halfHeight)} L${fmt(p.x)},${fmt(p.y + halfHeight)}`);
+    const result = {
+      records, lengths, mean, sd, N, S, rays, rows, spiral,
+      studies: {
+        rays: { u: rayUnit, r0, gap: rayGap, spacing: raySpacing, stroke: rayStroke, highlight: highlightFor(rayStroke), Lmax },
+        rows: { u: rowUnit, pitch, gap: rowGap, stroke: rowStroke, highlight: highlightFor(rowStroke), right, top, Lmax },
+        spiral: { u: spiralUnit, n: turns, p, r0: inner, b, R: outer, length, gap: spiralGap, stroke: spiralStroke, highlight: highlightFor(spiralStroke), amplitude }
       }
-      return { d: segments.join(' '), verse: verse.verse_number };
-    });
-    const result = { records, lengths, mean, sd, shellPaths, currentPaths, lineRows, lineTicks, lineEndpoints, lineBounds, lineFit, lineSpacing, lineWidth, wordStarts, N, currentEnd: position, currentHeading: heading, currentArcs, verseArcs, currentBounds, currentFit, shellBounds, shellFit };
+    };
     cache.set(chapter, result);
     if (cache.size > 8) cache.delete(cache.keys().next().value);
     return result;
   }
 
+  const mappings = {
+    rays: 'theta_i = pi/2 + 2pi(i-1)/V counter-clockwise on screen; ray from r0 = clamp(.19V, 24, 70) with length L*u, u = (260 - r0)/Lmax',
+    rows: 'row i at y = top + 2.4u(i-1), right-aligned, length L*u, u = min(520/Lmax, 520/(2.4(V-1)))',
+    spiral: 'r = r0 + p*theta/2pi from the centre outward, one letter per unit of arc; n = clamp(sqrt(S/16), 1.25, 40); p = (260 - .9)/(n + .85); r0 = .5p; swell = A*tanh((l - mu)/sigma)*sin^2(pi t), A <= .35p'
+  };
+  const round = values => Object.fromEntries(Object.entries(values).map(([k, v]) => [k, Number(v.toFixed(4))]));
+
   function markup(chapter, kind, options = {}) {
-    if (!['shell', 'current', 'lines'].includes(kind)) throw new Error('Unknown artwork method.');
+    const study = studies.find(s => s.key === kind);
+    if (!study) throw new Error('Unknown artwork method.');
     const g = build(chapter);
+    const values = g.studies[kind];
     const selected = Number(options.selected || 0);
-    const hasSelection = selected >= 1 && selected <= g.records.length;
-    const label = { shell: 'Verse Shell', current: 'Word Current', lines: 'Verse Lines' }[kind];
-    const metadata = { surah: chapter.id, name: chapter.name, method: label, words: g.N, letters: g.lengths.reduce((a, b) => a + b, 0), selectedVerse: hasSelection ? `${chapter.id}:${selected}` : null,
-      mapping: kind === 'shell' ? 'R=40+2L; A=.25*sigma/(mu+sigma); r=R(1+A*cos(W*theta)); phi=2*pi*(i-1)/V; z=12*(i-1); projection=(x,.42*y-.907*(z-6*(V-1)))' : kind === 'current' ? 's=10*length; delta=(3*pi/4)*tanh((length-globalMean)/globalSD); exact circular arcs in word order from (0,0), heading 0; zero SD gives straight lines' : 'For verse index i starting at 0, L=sum(word lengths); centered endpoints=(-3L,12i),(+3L,12i), so length=6L; uniformly fit all endpoints into [40,560]x[30,450], retaining length ratios; row stroke width=max(.45,min(1.6,.65*12*fitScale)); word boundaries at x=-3L+6*cumulativeWordLength are decorative paper-color breaks of width1 and height(rowStrokeWidth+1.4), drawn only when both neighboring words are at least3 SVG pixels wide; highlight selected verse in copper with width2.5; one verse remains a centered horizontal line',
-      source: 'https://api.quran.com/api/v4/quran/verses/uthmani', counting: 'Unicode whitespace words; Unicode L letters except U+0640/U+06E5/U+06E6; no normalization' };
-    let content = options.background === false ? '' : '<rect width="600" height="480" fill="#f8f5ec"/>';
-    content += '<g fill="none" stroke-linecap="round" stroke-linejoin="round">';
-    const path = (d, stroke, width, opacity, verse) => `<path d="${d}" stroke="${stroke}" stroke-width="${width}" stroke-opacity="${opacity}"${verse ? ` data-verse="${verse}"` : ''}/>`;
-    if (kind === 'lines') {
-      for (const row of g.lineRows) content += path(row.d, '#355c55', g.lineWidth, .78, row.verse);
-      for (const tick of g.lineTicks) if (tick.d) content += path(tick.d, '#f8f5ec', 1, 1, tick.verse);
-      if (hasSelection) content += path(g.lineRows[selected - 1].d, '#a96736', 2.5, 1, selected);
-    } else {
-      const paths = kind === 'shell' ? g.shellPaths : g.currentPaths;
-      for (const p of paths) content += path(p.d, '#355c55', kind === 'shell' ? 1.05 : 1.6, kind === 'shell' ? .58 : .78, p.verse);
-      if (hasSelection) { const active = paths[selected - 1]; content += path(active.d, '#a96736', kind === 'shell' ? 2.8 : 3.5, 1, selected); }
+    const hasSelection = Number.isInteger(selected) && selected >= 1 && selected <= g.records.length;
+    const colors = Object.assign({}, palette, options.palette || {});
+    const metadata = {
+      surah: chapter.id, name: chapter.name, method: study.name, words: g.N, letters: g.S, selectedVerse: hasSelection ? `${chapter.id}:${selected}` : null,
+      rule: 'one letter is one unit of line; word boundaries are breaks of .45u (max 4px) carved from the ink, drawn only when u >= 2px; frame 600 with 40px margin',
+      mapping: mappings[kind], values: round(values),
+      source: 'https://api.quran.com/api/v4/quran/verses/uthmani', counting: 'Unicode whitespace words; Unicode L letters except U+0640/U+06E5/U+06E6; no normalization'
+    };
+    let content = options.background === false ? '' : `<rect width="600" height="600" fill="${colors.paper}"/>`;
+    content += `<g fill="none" stroke="${colors.ink}" stroke-width="${fmt(values.stroke)}" stroke-linecap="butt" stroke-linejoin="round">`;
+    for (const path of g[kind]) content += `<path d="${path.d}" data-verse="${path.verse}"/>`;
+    if (hasSelection) {
+      const path = g[kind][selected - 1];
+      content += `<path d="${path.d}" stroke="${colors.accent}" stroke-width="${fmt(values.highlight)}" data-verse="${path.verse}"/>`;
     }
     content += '</g>';
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="960" viewBox="0 0 600 480" role="img" aria-label="${escape(`${chapter.name} — ${label}`)}"><title>${escape(`${chapter.name} — ${label}`)}</title><desc>${escape(`${label} generated from all ${g.N} written words in surah ${chapter.id}.${hasSelection ? ` Verse ${selected} highlighted.` : ''}`)}</desc><metadata>${escape(JSON.stringify(metadata))}</metadata>${content}</svg>`;
+    const label = `${chapter.name} — ${study.name}`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 600 600" role="img" aria-label="${escape(label)}"><title>${escape(label)}</title><desc>${escape(`${study.name} generated from all ${g.N} written words in surah ${chapter.id}.${hasSelection ? ` Verse ${selected} highlighted.` : ''}`)}</desc><metadata>${escape(JSON.stringify(metadata))}</metadata>${content}</svg>`;
   }
-  return { build, markup };
+  return { build, markup, studies, palette, style };
 });
