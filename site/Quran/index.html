@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="An art study of demonstrative language in the Quran. Explore 114 chapters as geometric paths drawn from the Quranic Arabic Corpus.">
+  <title>Quran Art — a study of pointing · Suph</title>
+  <link rel="canonical" href="https://suph.app/Quran">
+  <link rel="stylesheet" href="/Quran/art.css">
+  <script src="/Quran/app.js" defer></script>
+</head>
+<body>
+  <div class="page">
+    <header class="site-header">
+      <a class="wordmark" href="/" aria-label="Back to Suph homepage">suph<span>.app</span></a>
+      <a class="back-link" href="/">← All projects</a>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="title">
+        <div><p class="eyebrow"><span class="red-dot"></span> QURAN ART / AN ONGOING STUDY</p><h1 id="title">The language<br>of <em>pointing.</em></h1></div>
+        <div class="intro-copy"><p>This. That. These. Those.<br>Small words, leaving a line through each surah.</p><p class="muted">An exploration of the Quran’s demonstrative language, translated into geometric paths.</p><a href="#method">How the drawings work <span aria-hidden="true">↗</span></a></div>
+      </section>
+      <section id="explorer" class="explorer" aria-label="Selected surah artwork" aria-busy="true">
+        <div class="explorer-toolbar">
+          <div class="chapter-picker"><label for="chapter">SURAH</label><select id="chapter" aria-label="Choose a surah" disabled><option>Loading chapters…</option></select></div>
+          <div class="toolbar-actions"><button id="previous" aria-label="Previous surah" disabled>←</button><button id="next" aria-label="Next surah" disabled>→</button><button id="download" class="download" disabled>Download SVG <span aria-hidden="true">↗</span></button></div>
+        </div>
+        <div class="art-layout">
+          <div class="art-paper"><div class="art-corner"><span id="art-number">002 / 114</span><span>QAC · 0.4</span></div><div id="artwork" aria-label="Geometric artwork"></div><p id="empty-art" class="empty-art" hidden>No demonstrative pronouns.<br><span>The page remains open.</span></p><div class="art-caption"><span id="art-name">Al-Baqara</span><span id="art-sequence">LOADING DATA</span></div></div>
+          <aside class="art-info">
+            <p class="eyebrow">ONE CHAPTER, ONE LINE</p><h2 id="chapter-name">Al-Baqara</h2><p id="chapter-summary" class="muted">Loading the corpus…</p>
+            <dl class="metrics"><div><dt>Demonstratives</dt><dd id="count">—</dd></div><div><dt>Verses in the surah</dt><dd id="verses">—</dd></div></dl>
+            <div class="trace-controls"><div class="trace-heading"><label for="trace">Follow the line</label><button id="play" disabled>Trace ↗</button></div><input id="trace" type="range" min="0" max="1" value="1" aria-label="Number of demonstratives shown" disabled><p id="trace-status" class="micro">Each segment is one recorded occurrence.</p></div>
+            <div class="token-note" id="token-note"><span class="eyebrow">AT THIS POINT</span><p id="token-location">—</p><p id="token-form" class="token-form"></p><p class="micro" id="token-description">Select a point on the line to inspect its source.</p><a id="token-source" href="https://corpus.quran.com/" target="_blank" rel="noopener noreferrer">View in the corpus ↗</a></div>
+          </aside>
+        </div>
+        <p id="app-status" class="app-status" role="status" aria-live="polite">Loading verified corpus records…</p>
+      </section>
+      <section class="collection" id="collection" aria-labelledby="collection-title">
+        <div class="collection-heading"><div><p class="eyebrow">THE COLLECTION</p><h2 id="collection-title">114 chapters. <em>114 spaces.</em></h2></div><label class="search-label"><span class="sr-only">Find a surah by name or number</span><input id="search" type="search" placeholder="Find a surah…" autocomplete="off"></label></div>
+        <div id="gallery" class="gallery" aria-label="Surah artwork gallery"></div><p id="no-results" class="no-results" hidden>No chapters match your search.</p>
+      </section>
+      <section id="method" class="method" aria-labelledby="method-title">
+        <div><p class="eyebrow">A NOTE ON THE PROCESS</p><h2 id="method-title">Language becomes<br><em>a gesture.</em></h2></div>
+        <div class="method-copy"><p>Each line follows the demonstrative pronouns tagged <code>DEM</code> in the Quranic Arabic Corpus, in verse and word order. A word’s lemma determines its turn. Its position in the verse and the gap since the previous occurrence determine the length. Red marks the point you are inspecting.</p><p>This is a visual interpretation of linguistic annotations, not a translation or an interpretation of the Quran’s meaning. A chapter with no recorded demonstratives has no line.</p>
+          <details><summary>The drawing rules &amp; source</summary><p>This web edition adapts the <a href="https://github.com/Suphian/quran-art" target="_blank" rel="noopener noreferrer">original Quran Art experiment</a>. The original dependency-head dataset is unavailable here, so these drawings use verified morphology and verse positions instead of inferred syntactic relationships.</p><p>Starting upward, each occurrence adds one segment. The fixed lemma-to-turn mapping is listed in the <a href="/Quran/README.md">method documentation</a>. Segment length is 1 + word position ÷ words in the verse + min(verse gap, 12) ÷ 12. The composition is then scaled to fit; no records are generated or randomized.</p><p>Data: <a href="https://corpus.quran.com/" target="_blank" rel="noopener noreferrer">Quranic Arabic Corpus v0.4</a>, © 2011 Kais Dukes, GNU GPL with its published terms. Underlying Quran text: <a href="https://tanzil.net/" target="_blank" rel="noopener noreferrer">Tanzil</a>, © 2008–2009, CC BY-ND 3.0. <a href="/Quran/SOURCE_NOTICE.txt">Full original notices</a> · <a href="/Quran/data.json" download>Annotation index</a>.</p></details>
+        </div>
+      </section>
+    </main>
+    <footer><a class="wordmark" href="/">suph<span>.app</span></a><p>A small experiment in seeing language.<br><span>Built from the Quranic Arabic Corpus · 1,059 annotated demonstratives</span></p><a href="#title">Back to top ↑</a></footer>
+  </div>
+</body>
+</html>

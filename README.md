@@ -1,4 +1,14 @@
-# The Toga Is Dead
+# Suph.app
+
+A minimal project gallery at [suph.app](https://suph.app), with three black-and-white dither cards rendered from real, muted video. The homepage contains only the wordmark and project names. Playback respects reduced motion and pauses in hidden tabs. Video sources and licenses are recorded in [SOURCES.md](site/assets/projects/SOURCES.md).
+
+- **[The Toga Is Dead](https://suph.app/Toga)**: the existing browser game, now at `/Toga`.
+- **[Quran Art](https://suph.app/Quran)**: an interactive collection of geometric paths from Quranic Arabic Corpus demonstrative annotations, with chapter selection, tracing, and SVG export. See [its sources and method](site/Quran/README.md).
+- **Coming soon**: a looping film of ink blooming in water.
+
+Old root invitations with `?room=` and theme links still open Toga with their query and fragment intact. Game modules remain at their original root paths, and same-origin saved games keep their existing storage keys.
+
+## The Toga Is Dead
 
 A desktop-first 3D browser succession game for 2–4 players, with solo practice, same-screen play, and online invitations. Choose the medieval coastal kingdom or the Roman empire. Two and three players compete individually; four players form teams: seats 1 + 3 versus seats 2 + 4. The GitHub repository is `Suphian/the-toga-is-dead`; the Vercel hosting project remains `ceoisdead`.
 
@@ -6,7 +16,7 @@ This independent prototype implements the standard mechanics described in [RULES
 
 The [standard-rule audit](docs/RULES-AUDIT.md) maps setup, cards, borders, turns, and scoring to the official publisher rulebook and regression tests, and records the prototype's remaining edge-case conventions.
 
-**Play: [suph.app](https://suph.app)**, also [ceoisdead.vercel.app](https://ceoisdead.vercel.app). Choose **Invite your friends** in the welcome menu, or **New game → Invite friends**, select 2, 3, or 4 players, and create the table. Send the same invitation link to everyone. Guests need no Vercel or ChatGPT account. Each guest takes a seat and can choose their name and character; when everyone has joined, the host selects **Start game with everyone**. The plain domain opens the game without joining an existing table.
+**Play: [suph.app/Toga](https://suph.app/Toga)**, also [ceoisdead.vercel.app/Toga](https://ceoisdead.vercel.app/Toga). Choose **Invite your friends** in the welcome menu, or **New game → Invite friends**, select 2, 3, or 4 players, and create the table. Send the same invitation link to everyone. Guests need no Vercel or ChatGPT account. Each guest takes a seat and can choose their name and character; when everyone has joined, the host selects **Start game with everyone**. The plain domain opens the project gallery.
 
 The five-chapter **Field guide** explains play and includes a pass demonstration that leaves the match unchanged. **Read aloud** uses the browser/device speech service when available. The four illustrated contenders are decorative identities with no special powers. Music is an original 72-second Web Audio arrangement; it defaults off, starts only after interaction, and pauses in hidden tabs. Sound, volume, and atmosphere preferences stay on the current device.
 
@@ -24,7 +34,7 @@ cd the-toga-is-dead
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000**. The static game needs no npm installation or build step. Initial loading needs an internet connection for pinned browser libraries and web fonts. Refresh after editing files.
+Open **http://127.0.0.1:3000** for the gallery, **/Toga** for the game, and **/Quran** for Quran Art. The static site needs no npm installation or build step. Initial game loading needs an internet connection for pinned browser libraries and web fonts. Refresh after editing files.
 
 `npm test` runs the dependency-free engine, room transport, and audio lifecycle tests. The development server uses Node built-ins and serves only `site/`.
 
@@ -74,7 +84,9 @@ Host snapshots preserve the game, original invitation ID, player choices, and re
 
 ## Project map
 
-- `site/index.html`: metadata, styles, and pinned browser imports.
+- `site/index.html`, `site/projects/`: minimal gallery and video dither renderer.
+- `site/Toga/index.html`: game metadata, styles, and pinned browser imports.
+- `site/Quran/`: Quran Art application, bundled corpus data, and source documentation.
 - `site/app.js`: game interface, saves, turn orchestration, and room integration.
 - `site/presentation.js`: medieval/Roman labels, contender identities, and original SVG emblems.
 - `site/experience.js`: welcome menu, five-chapter guide, device read-aloud, sound controls, and atmosphere settings.

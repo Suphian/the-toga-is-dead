@@ -48,7 +48,7 @@ jobs:
       - name: Check browser interactions
         if: ${{ hashFiles('scripts/browser-smoke.mjs') != '' }}
         env:
-          BASE_URL: http://127.0.0.1:3000
+          BASE_URL: http://127.0.0.1:3000/Toga
         run: |
           node scripts/serve.mjs > /tmp/game-server.log 2>&1 &
           server_pid=$!

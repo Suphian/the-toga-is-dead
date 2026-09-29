@@ -3,5 +3,13 @@
   "framework": null,
   "buildCommand": "",
   "installCommand": "",
-  "outputDirectory": "site"
+  "outputDirectory": "site",
+  "rewrites": [
+    { "source": "/Toga", "destination": "/Toga/index.html" },
+    { "source": "/Quran", "destination": "/Quran/index.html" }
+  ],
+  "redirects": [
+    { "source": "/toga", "destination": "/Toga", "permanent": true },
+    { "source": "/quran", "destination": "/Quran", "permanent": true }
+  ]
 }

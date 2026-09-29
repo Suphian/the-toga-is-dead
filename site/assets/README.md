@@ -33,3 +33,6 @@ Both packs are **CC0**. Their original palette textures were embedded into self-
 [`site/audio.js`](../audio.js) synthesizes an original 72-second coastal arrangement and six tabletop SFX cues using Web Audio. Plucked strings, flute, harmony, and surf are generated in code; no music recordings, downloaded samples, or reference melodies are included. Playback starts only after a user gesture and follows device-local preferences.
 
 Field-guide read-aloud uses the browser's speech synthesis service, preferring an available local English voice and otherwise using its default. No prerecorded narration or third-party voice asset is bundled; voice availability depends on the browser and device.
+# Project gallery videos
+
+The homepage uses edited, muted Pexels footage for Toga, Quran Art, and Coming Soon. These are real videos processed into dither in the browser. Source URLs, creators, licensing, and clip processing are listed in [projects/SOURCES.md](projects/SOURCES.md).

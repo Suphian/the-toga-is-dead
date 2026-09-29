@@ -31,8 +31,8 @@ import { createGameLibrary } from './game-library.js';
   function words(value) { return translate(theme,value); }
   function personalSeat() { return mode==='online' ? localSeat : mode==='solo' ? 0 : null; }
   function characterFor(i) { return roomLobby?.seats[i]?.character ?? characters[i] ?? i%4; }
-  function portrait(i) { const p=COURT[characterFor(i)];return `<span class="portrait" style="--court:${p.color}"><img src="./assets/portraits/${p.image}.png" alt="" width="80" height="80"><span class="avatar" title="Seat ${i+1}">${i+1}</span></span>`; }
-  function characterPicker(id, chosen, disabled=false) { return `<fieldset class="character-picker" id="${id}" ${disabled?'disabled':''}><legend>Choose your character <small>Appearance only</small></legend><div>${COURT.map((p,i)=>`<label><input type="radio" name="${id}" value="${i}" ${chosen===i?'checked':''}><img src="./assets/portraits/${p.image}.png" alt=""><strong>${escape(p.name)}</strong><small>${escape(p.role)}</small></label>`).join('')}</div></fieldset>`; }
+  function portrait(i) { const p=COURT[characterFor(i)];return `<span class="portrait" style="--court:${p.color}"><img src="/assets/portraits/${p.image}.png" alt="" width="80" height="80"><span class="avatar" title="Seat ${i+1}">${i+1}</span></span>`; }
+  function characterPicker(id, chosen, disabled=false) { return `<fieldset class="character-picker" id="${id}" ${disabled?'disabled':''}><legend>Choose your character <small>Appearance only</small></legend><div>${COURT.map((p,i)=>`<label><input type="radio" name="${id}" value="${i}" ${chosen===i?'checked':''}><img src="/assets/portraits/${p.image}.png" alt=""><strong>${escape(p.name)}</strong><small>${escape(p.role)}</small></label>`).join('')}</div></fieldset>`; }
   function legal() {
     if(actionCache.revision !== game.revision || actionCache.state !== game) actionCache={revision:game.revision,state:game,actions:getLegalActions(game)};
     return actionCache.actions;

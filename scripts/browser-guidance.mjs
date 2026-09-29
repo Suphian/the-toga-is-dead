@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { createGame, getLegalActions, applyAction } from '../site/game/engine.js';
 
-const base = process.env.BASE_URL || 'http://127.0.0.1:3000';
+const base = process.env.BASE_URL || 'http://127.0.0.1:3000/Toga';
 const required = process.env.REQUIRE_MULTIPLAYER === '1' || process.argv.includes('--require-network');
 const coachKey = 'togaisdead.coach.v1';
 const report = { local: [], online: [], errors: [] };

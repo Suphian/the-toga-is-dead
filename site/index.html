@@ -1,41 +1,27 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#e8dfc8">
-  <meta name="description" content="A kingdom without a crown. Three rival factions, eight regions, and a table for 2–4 friends. Play a beautiful 3D game of influence and succession.">
-  <title>The Toga Is Dead — A game of succession</title>
-  <link rel="canonical" href="https://suph.app/">
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="The Toga Is Dead">
-  <meta property="og:title" content="The Toga Is Dead — A kingdom without a crown">
-  <meta property="og:description" content="Gather your friends. Make your alliances. Claim the crown. A beautiful 3D succession game for 2–4 players, right in your browser.">
-  <meta property="og:url" content="https://suph.app/">
-  <meta property="og:image" content="https://suph.app/assets/toga-cover.png">
-  <meta property="og:image:type" content="image/png">
-  <meta property="og:image:width" content="1732">
-  <meta property="og:image:height" content="908">
-  <meta property="og:image:alt" content="The Toga Is Dead. A kingdom without a crown. An illustrated coastal kingdom of castles, terracotta villages, and jade water. Play at suph.app.">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="The Toga Is Dead — A kingdom without a crown">
-  <meta name="twitter:description" content="Gather your friends. Make your alliances. Claim the crown. A 3D succession game for 2–4 players.">
-  <meta name="twitter:image" content="https://suph.app/assets/toga-cover.png">
-  <meta name="twitter:image:alt" content="An illustrated coastal kingdom with cream-stone castles and jade water. The Toga Is Dead. suph.app.">
-  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./kingdom.css">
-  <link rel="stylesheet" href="./guidance.css">
-  <link rel="stylesheet" href="./turn-feedback.css">
-  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
-</head>
-<body>
-  <div id="app"><main class="boot-screen"><span class="eyebrow">A KINGDOM WITHOUT A CROWN</span><h1>The Toga Is Dead</h1><p>Preparing your kingdom…</p></main></div>
-  <noscript>This game needs JavaScript. Enable JavaScript to play.</noscript>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="./app.js"></script>
-</body>
-</html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#ffffff"><meta name="description" content="Projects by Suphi. One month. Something new."><title>Suph.app — Projects by Suphi</title><link rel="canonical" href="https://suph.app/"><link rel="stylesheet" href="/projects/home.css"><script>if(new URLSearchParams(location.search).has("room")||new URLSearchParams(location.search).has("theme")){location.replace("/Toga"+location.search+location.hash)}</script></head><body>
+<div id="suph-home-concept" aria-label="Suph.app">
+  <header class="suph-header">
+    <a class="suph-wordmark" href="/" aria-label="Suph.app home">suph.app<span aria-hidden="true">.</span></a>
+  </header>
+  <main id="suph-main">
+    <h1 class="suph-visually-hidden">Projects</h1>
+    <div class="suph-project-grid">
+      <a class="suph-project" href="/Toga" aria-label="Play The Toga Is Dead">
+        <div class="suph-art"><canvas id="suph-toga-canvas" role="img" aria-label="Video of a Roman stone head, rendered in black and white"></canvas><span class="suph-video-status" data-video-status="toga">Loading video</span></div>
+        <div class="suph-caption"><h2>The Toga Is Dead</h2><span aria-hidden="true">↗</span></div>
+      </a>
+      <a class="suph-project" href="/Quran" aria-label="Open Quran Art">
+        <div class="suph-art"><canvas id="suph-quran-canvas" role="img" aria-label="Video of Quran pages turning, rendered in black and white"></canvas><span class="suph-video-status" data-video-status="quran">Loading video</span></div>
+        <div class="suph-caption"><h2>Quran Art</h2><span aria-hidden="true">↗</span></div>
+      </a>
+      <article class="suph-project suph-future" aria-label="Coming soon">
+        <div class="suph-art"><canvas id="suph-future-canvas" role="img" aria-label="Black ink blooming in water, rendered in dither"></canvas><span class="suph-video-status" data-video-status="coming">Loading video</span></div>
+        <div class="suph-caption"><h2>Coming soon</h2></div>
+      </article>
+    </div>
+  </main>
+</div>
+
+
+<script src="/projects/video-card.js"></script><script src="/projects/home.js"></script></body></html>

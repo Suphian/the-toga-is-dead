@@ -2,7 +2,7 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdir, writeFile } from 'node:fs/promises';
-const base = process.env.BASE_URL || 'http://127.0.0.1:3000';
+const base = process.env.BASE_URL || 'http://127.0.0.1:3000/Toga';
 await mkdir('test-results', { recursive: true });
 const browser = await chromium.launch({ headless: true, args: ['--enable-webgl', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const errors = [];
@@ -96,10 +96,10 @@ try {
   report.checks.push('Mobile layout has no page-level horizontal overflow');
   await mobileContext.close();
   try {
-    const previewUrl='https://suph.app/';
+    const previewUrl='https://suph.app/Toga';
     const response=await fetch(previewUrl,{signal:AbortSignal.timeout(15000)});
     const html=await response.text();
-    report.preview={url:previewUrl,status:response.status,sourceReady:html.includes('src="./app.js"')};
+    report.preview={url:previewUrl,status:response.status,sourceReady:html.includes('src="/app.js"')};
   } catch(error) {report.preview={error:error.message};}
 
   // Exercise a real two-browser peer connection when the public signaling service is reachable.
