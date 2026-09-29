@@ -3,7 +3,7 @@
 A minimal project gallery at [suph.app](https://suph.app), with three black-and-white dither cards rendered from real, muted video. The homepage contains only the wordmark and project names. Playback respects reduced motion and pauses in hidden tabs. Video sources and licenses are recorded in [SOURCES.md](site/assets/projects/SOURCES.md).
 
 - **[The Toga Is Dead](https://suph.app/Toga)**: the existing browser game, now at `/Toga`.
-- **[Quran Art](https://suph.app/Quran)**: an interactive collection of geometric paths from Quranic Arabic Corpus demonstrative annotations, with chapter selection, tracing, and SVG export. See [its sources and method](site/Quran/README.md).
+- **[Quran Art](https://suph.app/quran)**: three mathematical artworks for each of the 114 surahs, with a visual gallery, linked verse highlighting, explanations, and SVG downloads. See [its sources and method](projects/quran-art/README.md).
 - **Coming soon**: a looping film of ink blooming in water.
 
 Old root invitations with `?room=` and theme links still open Toga with their query and fragment intact. Game modules remain at their original root paths, and same-origin saved games keep their existing storage keys.
@@ -34,7 +34,7 @@ cd the-toga-is-dead
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000** for the gallery, **/Toga** for the game, and **/Quran** for Quran Art. The static site needs no npm installation or build step. Initial game loading needs an internet connection for pinned browser libraries and web fonts. Refresh after editing files.
+Open **http://127.0.0.1:3000** for the gallery, **/Toga** for the game, and **/quran** for Quran Art. The static site needs no npm installation or build step. Initial game loading needs an internet connection for pinned browser libraries and web fonts. Refresh after editing files.
 
 `npm test` runs the dependency-free engine, room transport, and audio lifecycle tests. The development server uses Node built-ins and serves only `site/`.
 
@@ -86,7 +86,7 @@ Host snapshots preserve the game, original invitation ID, player choices, and re
 
 - `site/index.html`, `site/projects/`: minimal gallery and video dither renderer.
 - `site/Toga/index.html`: game metadata, styles, and pinned browser imports.
-- `site/Quran/`: Quran Art application, bundled corpus data, and source documentation.
+- `site/quran/` and `site/surah/`: Quran Art gallery, named surah pages, and artwork exports.
 - `site/app.js`: game interface, saves, turn orchestration, and room integration.
 - `site/presentation.js`: medieval/Roman labels, contender identities, and original SVG emblems.
 - `site/experience.js`: welcome menu, five-chapter guide, device read-aloud, sound controls, and atmosphere settings.

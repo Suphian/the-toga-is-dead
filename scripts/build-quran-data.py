@@ -40,7 +40,7 @@ def main():
     assert sum(c['verses'] for c in chapters) == 6236
     assert chapters[0]['tokens'] == []
     assert chapters[1]['tokens'][0]['verse'] == 2 and chapters[1]['tokens'][0]['word'] == 1
-    target = Path(__file__).resolve().parents[1] / 'site' / 'Quran'
+    target = Path(__file__).resolve().parents[1] / 'projects' / 'quran-art' / 'previous-web-edition'
     target.mkdir(parents=True, exist_ok=True)
     result = {'version': 1, 'source': SOURCE, 'sourceSha256': SHA256,
         'sourceName': 'Quranic Arabic Corpus, morphology v0.4',
