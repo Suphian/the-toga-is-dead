@@ -3,7 +3,7 @@
 A minimal project gallery at [suph.app](https://suph.app), with three black-and-white dither cards rendered from real, muted video. The homepage contains only the wordmark and project names. Playback respects reduced motion and pauses in hidden tabs. Video sources and licenses are recorded in [SOURCES.md](site/assets/projects/SOURCES.md).
 
 - **[The Toga Is Dead](https://suph.app/Toga)**: the existing browser game, now at `/Toga`.
-- **[Quran Art](https://suph.app/quran)**: three mathematical artworks for each of the 114 surahs, with a visual gallery, linked verse highlighting, explanations, and SVG downloads. See [its sources and method](projects/quran-art/README.md).
+- **[Quran Art](https://suph.app/quran)**: three arrangements of one rule (a letter is a unit of line, a word boundary is a break) for each of the 114 surahs, with a visual gallery, linked verse highlighting, explanations, and SVG downloads. See [its sources and method](projects/quran-art/README.md).
 - **Coming soon**: a looping film of ink blooming in water.
 
 Old root invitations with `?room=` and theme links still open Toga with their query and fragment intact. Game modules remain at their original root paths, and same-origin saved games keep their existing storage keys.
@@ -111,6 +111,6 @@ CI checks JavaScript syntax, runs Node tests, and runs the browser verification 
 
 ## Quran Art
 
-The Quran gallery lives at `/quran`, with a page for each surah at `/surah/{name}` (for example `/surah/al-fajr`). Each page compares Verse Shell, Word Current, and Verse Lines, with linked verse highlighting, expandable mathematics, and SVG downloads. All 114 surahs and 342 artworks are included.
+The Quran gallery lives at `/quran`, with a page for each surah at `/surah/{name}` (for example `/surah/al-fajr`). Each page compares Rays, Rows, and Spiral, three arrangements of one rule: a letter is a unit of line and a word boundary is a break. Verse highlighting is linked across the three, the mathematics stays visible, and every artwork downloads as SVG. All 114 surahs and 342 artworks are included.
 
 Source, provenance, and regeneration instructions are in [`projects/quran-art/README.md`](projects/quran-art/README.md). Public output is isolated in `site/quran/` and `site/surah/`; the Toga game is unchanged.

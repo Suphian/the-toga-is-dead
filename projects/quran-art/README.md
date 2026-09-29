@@ -1,6 +1,6 @@
 # Quran Art
 
-Three numerical interpretations of every surah: **114 surahs and 342 artworks**. The gallery lives at `/quran`; each surah has a named detail page such as `/surah/al-fajr`. The detail pages share a verse selector and explain the theory behind each approach in permanently visible sections.
+Three arrangements of one rule for every surah: **114 surahs and 342 artworks**. The gallery lives at `/quran`; each surah has a named detail page such as `/surah/al-fajr`. The detail pages share a verse selector and explain the theory behind each approach in permanently visible sections.
 
 This directory contains the source and saved text data. The generated public files are in `../../site/quran/` and `../../site/surah/`. They are a self-contained addition to the existing static site. The Toga game remains at `/Toga`.
 
@@ -13,7 +13,7 @@ npm ci
 node scripts/build_site.js
 ```
 
-The build reads the checked-in dataset without making network requests. It writes the gallery, 114 detail pages, 342 downloadable SVG artworks, and 342 PNG thumbnails. The SVGs use the same geometry as the interactive detail pages. The raster thumbnails are rendered from those SVGs with pinned `@resvg/resvg-js`; they are not AI-generated images.
+The build reads the checked-in dataset without making network requests. It writes the gallery, 114 detail pages, 342 downloadable SVG artworks (1200×1200 exports of a 600-unit square frame), and 342 PNG thumbnails (640×640). The SVGs use the same geometry as the interactive detail pages. The raster thumbnails are rendered from those SVGs with pinned `@resvg/resvg-js`; they are not AI-generated images.
 
 To recalculate the dataset from its saved source responses, run `python scripts/derive_data.py`. Add `--fetch` only when intentionally replacing the source snapshots with a fresh Quran.com response. Review the resulting data changes before rebuilding. The data script validates chapter ordering, each chapter's verse count, and all 6,236 numbered verses.
 
@@ -27,14 +27,14 @@ Words are split on Unicode whitespace. Length counts Unicode letter codepoints, 
 
 Only numbered verses are used. This includes the basmala at 1:1 and within 27:30; no unnumbered opening basmala is added. All statistics use population standard deviation.
 
-## Three mappings
+## One rule, three arrangements
 
-The same mapping rules are applied to every surah. The constants set the visual style and do not assert hidden numerical meaning. `geometry.js` is shared by the generator and browser, so exports and interactive views use one implementation. Each artwork is fitted uniformly to its own frame; displayed size does not compare surah lengths.
+Every drawing follows one invariant: **one letter is one unit of line, and every word boundary is a small break.** Breaks are carved out of the ink on both sides of a boundary (0.45u wide, at most 4 units, drawn only when a letter is at least 2 units wide), so a verse's total length stays exactly proportional to its letters and dense surahs degrade to continuous strokes rather than speckle. The frame is a 600-unit square with a 40-unit margin, exported at 1200×1200; thumbnails are 640×640. `geometry.js` is shared by the generator and the browser, so exports and interactive views use one implementation. Each artwork is fitted uniformly to its own frame; displayed size does not compare surah lengths. The remaining constants (stroke, break and swell sizes) live in one `style` object and set the visual style only; none of them changes a length ratio.
 
-**Verse Shell.** A verse with W words, L letters, mean word length μᵥ and spread σᵥ becomes a rippled ring: R = 40 + 2L, A = 0.25σᵥ/(μᵥ + σᵥ), and r(θ) = R[1 + A cos(Wθ)]. For verse i of V, rotation is 2π(i − 1)/V and height is 12(i − 1). The display projects y to 0.42y − 0.907[z − 6(V − 1)]. Generalizing the stack's rotation and center to V preserves the original Al-Fajr geometry at V = 30.
+**Rays.** Verse i of V is a straight ray from an inner circle of radius r₀ = clamp(0.19V, 24, 70), at angle θᵢ = 90° + 360°(i − 1)/V measured counter-clockwise on screen, so verse 1 points up and later verses follow the reading direction. Its length is L·u with u = (260 − r₀)/L_max, so the longest verse reaches the frame. Words sit along the ray from the centre outward.
 
-**Word Current.** Read the entire surah's word lengths in order, with global mean μ and spread σ. A word of length ℓ draws a circular arc of length s = 10ℓ and signed turn Δ = (3π/4)tanh[(ℓ − μ)/σ]. The path begins at (0, 0), facing right; each arc continues with the preceding arc's end position and heading. A zero turn is straight. If σ = 0, the whole path is straight. The path is tangent-continuous and is not forced closed.
+**Rows.** Verse i is a horizontal row at y = 2.4u(i − 1), aligned to a common right edge where reading begins, with length L·u and u = min(520/L_max, 520/2.4(V − 1)). The block is centred; relative lengths remain proportional to letter counts.
 
-**Verse Lines.** Each ayah is one centered horizontal line. A verse with L retained letters spans x = −3L to +3L at y = 12(i − 1). A uniform scale fits the entire surah; relative lengths therefore remain proportional to letter counts. Subtle word-boundary marks reveal word grouping where space permits. The selected verse’s whole line is highlighted in copper. This replaces the earlier Fourier Bloom study.
+**Spiral.** The whole surah is one Archimedean spiral r = r₀ + pθ/2π read from the centre outward, one letter per unit of arc, word after word. The number of turns is n = clamp(√(S/16), 1.25, 40) for S total letters, so ink density stays even; p = (260 − 0.9)/(n + 0.85) and r₀ = p/2. Each word pushes the line radially by δ = A·tanh[(ℓ − μ)/σ]·sin²(πt), with μ and σ the surah's mean word length and spread, spread over at least 24 units of arc and soft-clamped so the total never exceeds A = min(0.35p, (p − w − 0.8)/2); neighbouring turns therefore never touch.
 
-The mathematical geometry is deterministic. No AI-generated artwork or external image assets are used in this gallery.
+The geometry is deterministic. No AI-generated artwork or external image assets are used in this gallery.

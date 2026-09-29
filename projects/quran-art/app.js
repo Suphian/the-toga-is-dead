@@ -1,18 +1,18 @@
 'use strict';
 (() => {
   const byId = id => document.getElementById(id);
-  const kinds = ['shell', 'current', 'lines'];
   if (document.body.dataset.page === 'gallery') {
     const cards = [...document.querySelectorAll('.surah-card')];
-    const setMode = kind => {
-      document.querySelectorAll('.mode').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.kind === kind)));
+    const buttons = [...document.querySelectorAll('.mode')];
+    const setMode = button => {
+      buttons.forEach(other => other.setAttribute('aria-pressed', String(other === button)));
       cards.forEach(card => {
         const img = card.querySelector('img');
-        img.src = `/quran/thumbs/${card.dataset.id}-${kind}.png`;
-        img.alt = `${card.dataset.name}: ${kind === 'shell' ? 'Verse Shell' : kind === 'current' ? 'Word Current' : 'Verse Lines'}`;
+        img.src = `/quran/thumbs/${card.dataset.id}-${button.dataset.kind}.png`;
+        img.alt = `${card.dataset.name}: ${button.textContent.trim()}`;
       });
     };
-    document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => setMode(button.dataset.kind)));
+    buttons.forEach(button => button.addEventListener('click', () => setMode(button)));
     byId('search').addEventListener('input', event => {
       const query = event.target.value.toLocaleLowerCase().trim().replace(/[-'’]/g, '');
       let count = 0;
@@ -29,19 +29,23 @@
   const chapter = JSON.parse(byId('chapter-data').textContent);
   const geometry = window.QuranGeometry;
   const model = geometry.build(chapter);
+  const kinds = geometry.studies.map(study => study.key);
+  const names = Object.fromEntries(geometry.studies.map(study => [study.key, study.name]));
+  const units = n => `${Number(n.toFixed(n < 10 ? 2 : 1))} units`;
+  const breaks = study => study.gap ? `word breaks are ${units(study.gap)} wide` : 'letters are under 2 units wide here, so word breaks are not drawn';
   const initial = Number(new URLSearchParams(location.search).get('verse'));
   let selected = Number.isInteger(initial) && initial >= 1 && initial <= chapter.verses.length ? initial : Math.min(2, chapter.verses.length);
   let initialized = false;
   const render = () => {
     kinds.forEach(kind => {
       const container = byId(`${kind}-art`);
-      if (!initialized) container.innerHTML = geometry.markup(chapter, kind, {selected, background:false});
+      if (!initialized) container.innerHTML = geometry.markup(chapter, kind, { selected, background: false });
       else {
         const group = container.querySelector('svg > g');
         group.lastElementChild.remove();
-        const path = document.createElementNS('http://www.w3.org/2000/svg','path');
-        const d = kind === 'shell' ? model.shellPaths[selected-1].d : kind === 'current' ? model.currentPaths[selected-1].d : model.lineRows[selected-1].d;
-        for (const [key,value] of Object.entries({d,stroke:'#a96736','stroke-width':kind==='shell'?2.8:kind==='current'?3.5:2.5,'data-verse':selected})) path.setAttribute(key,value);
+        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        const attributes = { d: model[kind][selected - 1].d, stroke: geometry.palette.accent, 'stroke-width': model.studies[kind].highlight, 'data-verse': selected };
+        for (const [key, value] of Object.entries(attributes)) path.setAttribute(key, value);
         group.append(path);
         container.querySelector('desc').textContent = `${chapter.name}: verse ${selected} highlighted.`;
       }
@@ -60,26 +64,27 @@
     byId('count-letters').textContent = record.L;
     byId('count-mean').textContent = record.mean.toFixed(2);
     byId('count-sd').textContent = record.sd.toFixed(2);
-    byId('length-bars').replaceChildren(...verse.word_lengths.map((length,index) => {
+    byId('length-bars').replaceChildren(...verse.word_lengths.map((length, index) => {
       const bar = document.createElement('span');
-      bar.className = 'length-bar'; bar.style.setProperty('--length',length);
+      bar.className = 'length-bar'; bar.style.setProperty('--length', length);
       bar.textContent = length; bar.title = `${verse.words[index]}: ${length} letters`;
       return bar;
     }));
-    byId('shell-values').textContent = `Verse ${selected}: ${record.W} words, ${record.L} letters. R = ${record.R}; A = ${record.A.toFixed(4)}.`;
-    byId('current-values').textContent = `Across this surah: μ = ${model.mean.toFixed(3)} letters; σ = ${model.sd.toFixed(3)}. The path contains ${model.N.toLocaleString()} word arcs.`;
-    byId('lines-values').textContent = `Verse ${selected}: ${record.L} letters → a line ${6*record.L} units long.`;
+    const { rays, rows, spiral } = model.studies;
+    byId('rays-values').textContent = `Verse ${selected}: ${record.L} letters → a ray ${units(record.L * rays.u)} long from an inner circle of radius ${units(rays.r0)}; ${units(rays.u)} per letter; ${breaks(rays)}.`;
+    byId('rows-values').textContent = `Verse ${selected}: ${record.L} letters → a row ${units(record.L * rows.u)} long; rows are ${units(rows.pitch)} apart; ${units(rows.u)} per letter; ${breaks(rows)}.`;
+    byId('spiral-values').textContent = `${model.S.toLocaleString()} letters along ${spiral.n.toFixed(2)} turns, ${units(spiral.p)} apart; ${units(spiral.u)} per letter; μ = ${model.mean.toFixed(3)}, σ = ${model.sd.toFixed(3)}; swell up to ${units(spiral.amplitude)}. Verse ${selected} covers ${record.W} ${record.W === 1 ? 'word' : 'words'}.`;
   };
   byId('verse-range').addEventListener('input', event => { selected = Number(event.target.value); render(); });
-  byId('previous-verse').addEventListener('click', () => {selected = Math.max(1, selected - 1); render();});
-  byId('next-verse').addEventListener('click', () => {selected = Math.min(chapter.verses.length, selected + 1); render();});
-  byId('surah-select').addEventListener('change', event => {location.href = `/surah/${event.target.value}`;});
+  byId('previous-verse').addEventListener('click', () => { selected = Math.max(1, selected - 1); render(); });
+  byId('next-verse').addEventListener('click', () => { selected = Math.min(chapter.verses.length, selected + 1); render(); });
+  byId('surah-select').addEventListener('change', event => { location.href = `/surah/${event.target.value}`; });
   kinds.forEach(kind => byId(`${kind}-art`).addEventListener('click', () => {
-    byId('dialog-title').textContent = `${chapter.name} · ${{shell:'Verse Shell',current:'Word Current',lines:'Verse Lines'}[kind]}`;
-    byId('dialog-art').innerHTML = geometry.markup(chapter,kind,{selected,background:false});
+    byId('dialog-title').textContent = `${chapter.name} · ${names[kind]}`;
+    byId('dialog-art').innerHTML = geometry.markup(chapter, kind, { selected, background: false });
     byId('art-dialog').showModal();
   }));
-  byId('close-art').addEventListener('click',()=>byId('art-dialog').close());
-  byId('art-dialog').addEventListener('click',event=>{if(event.target===byId('art-dialog')) byId('art-dialog').close();});
+  byId('close-art').addEventListener('click', () => byId('art-dialog').close());
+  byId('art-dialog').addEventListener('click', event => { if (event.target === byId('art-dialog')) byId('art-dialog').close(); });
   render();
 })();
