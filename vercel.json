@@ -21,12 +21,5 @@
       "source": "/Quran",
       "destination": "/quran/index.html"
     }
-  ],
-  "redirects": [
-    {
-      "source": "/toga",
-      "destination": "/Toga",
-      "permanent": true
-    }
   ]
 }
