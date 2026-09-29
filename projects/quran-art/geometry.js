@@ -25,7 +25,7 @@
     rowPitch: 2.4,                                     // letter units between rows
     rayInner: .19, rayInnerMin: 24, rayInnerMax: 70,   // inner circle radius from verse count
     spiralTurnsDivisor: 16, spiralTurnsMin: 1.25, spiralTurnsMax: 40,
-    spiralInner: .5, swell: .35, swellSlope: .2, swellMin: .25, minPaper: .8,
+    spiralInner: .5, swell: .35, swellSlope: .2, swellWavelength: 24, minPaper: .8,
     chordTolerance: .08, sampleMin: 1, sampleMax: 4
   };
   const cache = new Map();
@@ -116,6 +116,28 @@
       const r = radiusAt(s), theta = Math.PI / 2 + (r - inner) / b, radius = r + offset;
       return { x: CENTER + radius * Math.cos(theta), y: CENTER - radius * Math.sin(theta) };
     };
+    // Swell: a word longer than the surah's average pushes the line outward,
+    // a shorter word pulls it inward. Each push is a sin^2 bump centred on
+    // the word and at least `swellWavelength` px wide, weighted by the share
+    // of that window the word occupies, so dense surahs undulate slowly
+    // instead of vibrating. The summed offset is soft-clamped to `amplitude`,
+    // which keeps adjacent turns apart.
+    const offsets = new Float64Array(Math.ceil(length) + 2);
+    if (sd > 1e-12 && amplitude > 0) {
+      let at = 0;
+      for (const wordLength of lengths) {
+        const arc = wordLength * spiralUnit, wave = Math.max(arc, style.swellWavelength);
+        const peak = Math.tanh((wordLength - mean) / sd) * Math.min(amplitude, style.swellSlope * wave) * (arc / wave);
+        const from = at + (arc - wave) / 2;
+        for (let i = Math.max(0, Math.ceil(from)), stop = Math.min(offsets.length - 1, Math.floor(from + wave)); i <= stop; i++) offsets[i] += peak * Math.sin(Math.PI * (i - from) / wave) ** 2;
+        at += arc;
+      }
+      for (let i = 0; i < offsets.length; i++) offsets[i] = amplitude * Math.tanh(offsets[i] / amplitude);
+    }
+    const offsetAt = s => {
+      const i = Math.min(offsets.length - 2, Math.max(0, Math.floor(s))), f = s - i;
+      return offsets[i] * (1 - f) + offsets[i + 1] * f;
+    };
     let position = 0;
     const spiral = records.map(verse => {
       let d = '';
@@ -124,11 +146,9 @@
         const start = position, arc = wordLength * spiralUnit;
         const from = start + (spiralGap && k > 0 ? spiralGap / 2 : 0);
         const to = start + arc - (spiralGap && k < last ? spiralGap / 2 : 0);
-        let swell = sd > 1e-12 ? Math.tanh((wordLength - mean) / sd) * Math.min(amplitude, style.swellSlope * arc) : 0;
-        if (Math.abs(swell) < style.swellMin) swell = 0;
         let s = from, first = spiralGap ? true : k === 0;
         for (;;) {
-          const q = point(s, swell * Math.sin(Math.PI * (s - start) / arc) ** 2);
+          const q = point(s, offsetAt(s));
           d += (first ? 'M' : 'L') + fmt(q.x) + ',' + fmt(q.y);
           first = false;
           if (s >= to - 1e-9) break;
