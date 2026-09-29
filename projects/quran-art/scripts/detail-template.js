@@ -6,7 +6,7 @@ module.exports = ({c,head,esc,safeJSON,sourceFooter,theories,options}) => {
       <div class="art-heading"><h2>${name}</h2><a class="save" href="/quran/artworks/${c.id}-${kind}.svg" download="${esc(c.slug)}-${kind}.svg" aria-label="Save ${name} as SVG">Save SVG ↓</a></div>
       <p class="art-deck">${deck}</p>
       <button class="artwork" id="${kind}-art" aria-label="Enlarge ${name}" title="Enlarge artwork"><img src="/quran/thumbs/${c.id}-${kind}.png" alt="${esc(c.name)}: ${name}" width="600" height="480"></button>
-      <details class="theory" open><summary>The mathematics</summary>${theories[kind]}</details>
+      <section class="theory" aria-labelledby="${kind}-theory-title"><h3 class="theory-heading" id="${kind}-theory-title">The mathematics</h3>${theories[kind]}</section>
     </article>`).join('');
   return `${head(c.name,'../')}<body class="detail" data-page="detail">
     <header><nav class="nav"><a class="brand" href="/">suph.</a><label><span class="visually-hidden">Choose a surah</span><select id="surah-select" class="surah-select">${options}</select></label></nav></header>

@@ -1,6 +1,6 @@
 # Quran Art
 
-Three numerical interpretations of every surah: **114 surahs and 342 artworks**. The gallery lives at `/quran`; each surah has a named detail page such as `/surah/al-fajr`. The detail pages share a verse selector and explain the theory behind each approach in sections that open by default.
+Three numerical interpretations of every surah: **114 surahs and 342 artworks**. The gallery lives at `/quran`; each surah has a named detail page such as `/surah/al-fajr`. The detail pages share a verse selector and explain the theory behind each approach in permanently visible sections.
 
 This directory contains the source and saved text data. The generated public files are in `../../site/quran/` and `../../site/surah/`. They are a self-contained addition to the existing static site. The Toga game remains at `/Toga`.
 
