@@ -108,3 +108,9 @@ Host snapshots preserve the game, original invitation ID, player choices, and re
 - `scripts/browser-library.mjs`: multiple saves, archive/reopen, completed review, and real host/guest fresh-tab recovery.
 
 CI checks JavaScript syntax, runs Node tests, and runs the browser verification scripts with pinned Playwright. Screenshots and reports are retained in the `browser-results` artifact. Reports distinguish completed real-network checks from unavailable signaling/network services. See [AGENTS.md](AGENTS.md) for local browser-test commands.
+
+## Quran Art
+
+The Quran gallery lives at `/quran`, with a page for each surah at `/surah/{name}` (for example `/surah/al-fajr`). Each page compares Verse Shell, Word Current, and Fourier Bloom, with linked verse highlighting, expandable mathematics, and SVG downloads. All 114 surahs and 342 artworks are included.
+
+Source, provenance, and regeneration instructions are in [`projects/quran-art/README.md`](projects/quran-art/README.md). Public output is isolated in `site/quran/` and `site/surah/`; the Toga game is unchanged.
