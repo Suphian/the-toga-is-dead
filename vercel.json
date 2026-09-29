@@ -10,6 +10,10 @@
       "destination": "/Toga/index.html"
     },
     {
+      "source": "/toga",
+      "destination": "/Toga/index.html"
+    },
+    {
       "source": "/quran",
       "destination": "/quran/index.html"
     },
