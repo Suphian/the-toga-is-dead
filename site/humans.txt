@@ -1,0 +1,17 @@
+/* TEAM */
+Name: Suphian Tweel
+Title: Product leader. Led payments at YouTube; builds Abacus Labs and suph.app.
+Contact: hello@suphian.com
+Site: https://suphian.com/
+
+/* THANKS */
+Quran.com: Uthmani text and chapter metadata (https://api.quran.com/api/v4/quran/verses/uthmani)
+The Instagrapher: “Close Up of a Sculpture” (https://www.pexels.com/video/close-up-of-a-sculpture-7534448/)
+Almas: “Close-Up on Scrolling Quran Pages” (https://www.pexels.com/video/close-up-on-scrolling-quran-pages-10662285/)
+Aferali: “Black Ink Swirling in Water” (https://www.pexels.com/video/black-ink-swirling-in-water-6577871/)
+
+/* SITE */
+Language: English
+Built with: HTML, CSS, JavaScript, three.js, PeerJS, Web Audio, resvg-js, sharp
+Hosting: Vercel
+Last update: 2026-09-29

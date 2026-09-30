@@ -1,0 +1,28 @@
+# Suph.app
+
+> Small projects by Suphian Tweel: The Toga Is Dead, a 3D strategy game for the browser, and Quran Art, a gallery of artworks for all 114 surahs of the Quran.
+
+Small things I build to explore. When a new model or tool comes out, I like to spend a weekend with it and use it to solve a real problem. I don’t plan to support them; they’re experiments I think are worth sharing.
+
+## Projects
+
+- [The Toga Is Dead](https://suph.app/Toga): A 3D board game you play in the browser: 2–4 players, with solo practice, same-screen play and online invitations, set in a medieval coastal kingdom or the Roman empire.
+- [Quran Art](https://suph.app/quran): Three mathematical artworks for every surah of the Quran. Explore language through shape, rhythm, and geometry. Each surah has its own page, such as https://suph.app/surah/al-fatihah/, with SVG downloads.
+- Coming soon: a looping film of ink blooming in water.
+
+## Pages
+
+- [Gallery](https://suph.app/): The three project cards.
+- [Full text](https://suph.app/llms-full.txt): Project documentation, game rules, Quran Art sources and method, and every surah page.
+- [Sitemap](https://suph.app/sitemap.xml): All 117 pages.
+
+## Author
+
+- [Suphian Tweel](https://suphian.com/): Product leader. Led payments at YouTube, 2020 – 2026. Founder of Abacus Labs, a command center for MCA operators. Shares weekend experiments at suph.app.
+- [suphian.com/llms.txt](https://suphian.com/llms.txt): His portfolio in plain text.
+
+## Contact and profiles
+
+- [Email hello@suphian.com](mailto:hello@suphian.com)
+- [LinkedIn](https://www.linkedin.com/in/suphian/)
+- [GitHub](https://github.com/Suphian)

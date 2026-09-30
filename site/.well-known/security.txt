@@ -1,0 +1,16 @@
+Contact: mailto:hello@suphian.com
+Expires: 2027-09-29T23:59:59.000Z
+Preferred-Languages: en
+Canonical: https://suph.app/.well-known/security.txt
+
+# Reporting Security Vulnerabilities
+
+If you discover a security vulnerability, please report it responsibly:
+
+1. Do NOT open a public issue
+2. Send details to hello@suphian.com
+3. Include steps to reproduce the vulnerability
+
+Acknowledgment within 48 hours.
+
+Last updated: 2026-09-29

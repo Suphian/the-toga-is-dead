@@ -1,0 +1,33 @@
+# Public pages and assets are crawlable.
+User-agent: *
+Allow: /
+
+# Search, assistant and AI crawlers, named explicitly (same policy as suphian.com).
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+User-agent: Bytespider
+Allow: /
+
+Sitemap: https://suph.app/sitemap.xml
