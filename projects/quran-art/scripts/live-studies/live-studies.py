@@ -2,8 +2,10 @@
 
 The live studies are Verse Shell, Word Current and Verse Lines. build-live-studies.sh runs this
 from projects/quran-art of a pristine `git archive 1fa0c9c projects/quran-art` tree; it edits that
-copy's build_site.js, detail-template.js and app.js (head metadata, <picture> + WebP thumbnails,
-the gallery's <source> srcset update) and leaves every visible string unchanged.
+copy's build_site.js, detail-template.js and app.js (head metadata, the /projects/ph.js analytics
+tag, <picture> + WebP thumbnails, the gallery's <source> srcset update, and the PostHog events
+surah_viewed / surah_study_switched / artwork_downloaded mirrored from HEAD's app.js) and leaves every
+visible string unchanged.
 Delete this directory when the one-rule studies are approved and built with build_site.js.
 """
 
@@ -21,7 +23,7 @@ def edit(path, pairs):
 HEAD_OLD = """const head = (title,prefix='') => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f8f5ec"><meta name="description" content="Three mathematical artworks for every surah of the Quran. Explore language through shape, rhythm, and geometry."><title>${esc(title)} · Quran Art</title><link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='24' fill='none' stroke='%23355c55' stroke-width='3'/%3E%3C/svg%3E"><link rel="stylesheet" href="/quran/style.css"></head>`;"""
 HEAD_NEW = """const galleryDescription = 'Three mathematical artworks for every surah of the Quran. Explore language through shape, rhythm, and geometry.';
 const studies = [{key:'shell',name:'Verse Shell'},{key:'current',name:'Word Current'},{key:'lines',name:'Verse Lines'}];
-const head = (title,page) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f8f5ec"><title>${esc(title)} · Quran Art</title>${meta.tags({title:`${title} · Quran Art`, ...page})}<link rel="stylesheet" href="/quran/style.css"></head>`;"""
+const head = (title,page) => `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f8f5ec"><title>${esc(title)} · Quran Art</title>${meta.tags({title:`${title} · Quran Art`, ...page})}<link rel="stylesheet" href="/quran/style.css"><script defer src="/projects/ph.js"></script></head>`;"""
 CARD_OLD = '<img src="/quran/thumbs/${c.id}-shell.png" alt="${esc(c.name)}: Verse Shell" width="600" height="480" loading="lazy" decoding="async">'
 CARD_NEW = '${meta.picture(`/quran/thumbs/${c.id}-shell`, `alt="${esc(c.name)}: Verse Shell" width="600" height="480" loading="lazy" decoding="async"`)}'
 COUNT_OLD = "let count = 0;\n"
@@ -100,5 +102,35 @@ edit('app.js', [
         const source = card.querySelector('source');
         if (source) source.srcset = `/quran/thumbs/${card.dataset.id}-${kind}.webp`;
         img.src = `/quran/thumbs/${card.dataset.id}-${kind}.png`;"""),
+    ("""  const byId = id => document.getElementById(id);
+""",
+     """  const byId = id => document.getElementById(id);
+  // Analytics via /projects/ph.js: a no-op unless PostHog runs on suph.app. No personal data.
+  const track = (event, props) => { if (typeof window.suphTrack === 'function') window.suphTrack(event, props); };
+"""),
+    ("""    document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => setMode(button.dataset.kind)));
+""",
+     """    document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => {
+      // The gallery switches every card at once, so there is no surah id.
+      if (button.getAttribute('aria-pressed') !== 'true') track('surah_study_switched', { id: null, study: button.dataset.kind });
+      setMode(button.dataset.kind);
+    }));
+"""),
+    ("""  const chapter = JSON.parse(byId('chapter-data').textContent);
+""",
+     """  const chapter = JSON.parse(byId('chapter-data').textContent);
+  track('surah_viewed', { id: chapter.id, slug: chapter.slug });
+  document.addEventListener('click', event => {
+    const link = event.target.closest('a[download][href^="/quran/artworks/"]');
+    if (!link) return;
+    const [id, study] = link.getAttribute('href').split('/').pop().replace(/[.]svg$/, '').split('-');
+    track('artwork_downloaded', { id: Number(id), study });
+  });
+"""),
+    ("""  kinds.forEach(kind => byId(`${kind}-art`).addEventListener('click', () => {
+    byId('dialog-title')""",
+     """  kinds.forEach(kind => byId(`${kind}-art`).addEventListener('click', () => {
+    track('surah_study_switched', { id: chapter.id, study: kind });
+    byId('dialog-title')"""),
 ])
 print('patched live-studies generator')

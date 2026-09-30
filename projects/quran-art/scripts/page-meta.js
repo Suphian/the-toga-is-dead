@@ -54,7 +54,9 @@ const artworkGraph = ({c, name, description, images, dateCreated}) => [website, 
   about:{'@type':'Chapter', name:c.name, alternateName:c.name_arabic, position:c.id, isPartOf:{'@type':'Book', name:'Quran', inLanguage:'ar'}},
 }];
 
-const ICONS = '<link rel="icon" href="/favicon.ico" sizes="32x32"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/icons/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest">';
+// The Quran pages keep their own sage-circle tab icon (as at 1fa0c9c); the gallery and /Toga use
+// the shared /favicon.svg + /favicon.ico set.
+const ICONS = "<link rel=\"icon\" href=\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='24' fill='none' stroke='%23355c55' stroke-width='3'/%3E%3C/svg%3E\"><link rel=\"apple-touch-icon\" href=\"/icons/apple-touch-icon.png\"><link rel=\"manifest\" href=\"/site.webmanifest\">";
 
 // Everything a generated <head> carries after <title>. `image` is a PNG thumbnail.
 const tags = ({title, description, canonical, image, graph}) => [
