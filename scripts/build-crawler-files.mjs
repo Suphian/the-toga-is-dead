@@ -80,11 +80,45 @@ const atRef = path => Boolean(docsRef) && studyDocuments.has(path);
 const readDocument = path => atRef(path)
   ? execFileSync('git', ['show', `${docsRef}:${path}`], { cwd: repo, encoding: 'utf8' }).replace(/\r\n/g, '\n')
   : read(path);
-const document = path => {
+// llms-full.txt is reading material for visitors and their AI assistants: what each project is,
+// how to play, the rules, the Quran Art method and sources, and credits. It leaves out local setup,
+// collaboration, tests/CI, deployment and file layout. Each document lists the level-2 (##) sections
+// it contributes; its opening section (title and intro) is always kept, ### subsections follow
+// their ## parent, and every other ## section is dropped. A listed heading that no longer exists
+// stops the build, so renaming a section cannot silently drop it.
+const documents = [
+  ['README.md', ['The Toga Is Dead', 'Online rooms', 'Quran Art']],
+  ['RULES.md', ['Factions and regions', 'Setup and turns', 'The eight cards', 'Victory', 'Explicit prototype interpretations']],
+  ['projects/quran-art/README.md', ['Text and counting', 'Three mappings']],
+  ['projects/quran-art/data/method.md', []],
+  ['site/assets/projects/SOURCES.md', ['Toga', 'Quran Art', 'Coming soon']],
+];
+// Strings that only appear in operational text; the build fails if llms-full.txt contains one.
+const OPERATIONAL_TEXT = ['quran-art-publish', 'feat/quran-one-rule', 'ceoisdead', 'vercel --prod', 'npm ', 'git clone', '127.0.0.1', 'localhost'];
+const keptSections = (path, sections, text) => {
+  const wanted = new Set(sections);
+  const seen = new Set();
+  let fenced = false;
+  let keep = true;
+  const lines = [];
+  for (const line of text.split('\n')) {
+    if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
+    const heading = !fenced && /^##\s+(.+?)\s*$/.exec(line);
+    if (heading) {
+      keep = wanted.has(heading[1]);
+      if (keep) seen.add(heading[1]);
+    }
+    if (keep) lines.push(line);
+  }
+  const missing = sections.filter(title => !seen.has(title));
+  if (missing.length) throw new Error(`${path} has no "## ${missing.join('", "## ')}" section for llms-full.txt`);
+  return lines.join('\n');
+};
+const document = ([path, sections]) => {
   let fenced = false;
   let sourced = false;
   const lines = [];
-  for (const line of readDocument(path).trimEnd().split('\n')) {
+  for (const line of keptSections(path, sections, readDocument(path)).trimEnd().split('\n')) {
     if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
     if (!fenced && /^#{1,6}\s/.test(line)) {
       lines.push(line.replace(/^(#{1,6})/, hashes => '#'.repeat(Math.min(6, hashes.length + 2))));
@@ -100,7 +134,6 @@ const document = path => {
   }
   return lines.join('\n');
 };
-const documents = ['README.md', 'RULES.md', 'projects/quran-art/README.md', 'projects/quran-art/data/method.md', 'site/assets/projects/SOURCES.md'];
 
 // ---- Footage credits from SOURCES.md, for humans.txt ----
 const credits = [];
@@ -204,6 +237,9 @@ const files = {
   ],
   [`${indexNowKey}.txt`]: [indexNowKey],
 };
+
+const leaked = OPERATIONAL_TEXT.filter(text => files['llms-full.txt'].join('\n').includes(text));
+if (leaked.length) throw new Error(`llms-full.txt contains operational text: ${leaked.join(', ')}`);
 
 for (const [name, lines] of Object.entries(files)) {
   const path = join(site, name);

@@ -10,13 +10,13 @@ Old root invitations with `?room=` and theme links still open Toga with their qu
 
 ## The Toga Is Dead
 
-A desktop-first 3D browser succession game for 2–4 players, with solo practice, same-screen play, and online invitations. Choose the medieval coastal kingdom or the Roman empire. Two and three players compete individually; four players form teams: seats 1 + 3 versus seats 2 + 4. The GitHub repository is `Suphian/the-toga-is-dead`; the Vercel hosting project remains `ceoisdead`.
+A desktop-first 3D browser succession game for 2–4 players, with solo practice, same-screen play, and online invitations. Choose the medieval coastal kingdom or the Roman empire. Two and three players compete individually; four players form teams: seats 1 + 3 versus seats 2 + 4.
 
 This independent prototype implements the standard mechanics described in [RULES.md](RULES.md), with original interface, architecture, illustrations, and procedural audio. The coastal board includes miniature landmarks, villages, forests, docks, boats, moving water, faction pieces, and move animations. Morning, golden-hour, and moonlight settings change the atmosphere locally.
 
 The [standard-rule audit](docs/RULES-AUDIT.md) maps setup, cards, borders, turns, and scoring to the official publisher rulebook and regression tests, and records the prototype's remaining edge-case conventions.
 
-**Play: [suph.app/Toga](https://suph.app/Toga)**, also [ceoisdead.vercel.app/Toga](https://ceoisdead.vercel.app/Toga). Choose **Invite your friends** in the welcome menu, or **New game → Invite friends**, select 2, 3, or 4 players, and create the table. Send the same invitation link to everyone. Guests need no Vercel or ChatGPT account. Each guest takes a seat and can choose their name and character; when everyone has joined, the host selects **Start game with everyone**. The plain domain opens the project gallery.
+**Play: [suph.app/Toga](https://suph.app/Toga)**. Choose **Invite your friends** in the welcome menu, or **New game → Invite friends**, select 2, 3, or 4 players, and create the table. Send the same invitation link to everyone. Guests need no Vercel or ChatGPT account. Each guest takes a seat and can choose their name and character; when everyone has joined, the host selects **Start game with everyone**. The plain domain opens the project gallery.
 
 The five-chapter **Field guide** explains play and includes a pass demonstration that leaves the match unchanged. **Read aloud** uses the browser/device speech service when available. The four illustrated contenders are decorative identities with no special powers. Music is an original 72-second Web Audio arrangement; it defaults off, starts only after interaction, and pauses in hidden tabs. Sound, volume, and atmosphere preferences stay on the current device.
 
@@ -74,15 +74,17 @@ Both collaborators can use VS Code Live Share. The host opens the project, runs 
 
 For local-network testing, set `HOST=0.0.0.0` and optionally `PORT` before starting the server. The default binds to your own computer; Live Share works with that default.
 
-## Deployment and online rooms
-
-The Vercel project is **ceoisdead** in team **suph**, with production domain **suph.app**. `vercel.json` publishes `site/` without install or build commands. Production is deployed by running `vercel --prod` from the `quran-art-publish` worktree (branch `feat/quran-one-rule`), not by Git integration from `main`. The Netlify configuration remains as an alternative static-host setup.
-
-Caching (`vercel.json` headers, last match wins): site JS and CSS are `public, max-age=0, must-revalidate` because the modules import each other by plain, unversioned paths; `/vendor/`, `/fonts/`, `/assets/` and `/quran/(thumbs|artworks)/` are cached for 30 days with 7 days of stale-while-revalidate, so replaced files there need a new path. In particular, a three.js upgrade (r180 today) must move `/vendor/three/` to a new path and update the import map and modulepreloads in `site/Toga/index.html`.
+## Online rooms
 
 Rooms use PeerJS/WebRTC. Up to three guests connect to the host, which validates seat ownership, state revision, and legal moves before broadcasting updates. Seats freeze when the match starts; any disconnect pauses everyone. Guests can refresh or resume from **My games**. Their private seat token is stored with the game on this browser and is never included in the shared link or public lobby.
 
 Host snapshots preserve the game, original invitation ID, player choices, and reserved seats. The host can close the tab and reopen that table from **My games**; guests then reconnect with their saved seats. The table pauses while anyone is absent. An already-open host tab must be closed before the same table can be hosted again. These casual rooms have no account authentication or server persistence, and some networks block direct connections. Same-screen and practice modes remain available. Existing local corporate-themed saves restore with medieval presentation while retaining players, moves, and turn order.
+
+## Deployment
+
+The GitHub repository is `Suphian/the-toga-is-dead`. The Vercel project is **ceoisdead** in team **suph**, with production domain **suph.app**; the same build also answers at [ceoisdead.vercel.app/Toga](https://ceoisdead.vercel.app/Toga), which is noindexed and does not load PostHog. `vercel.json` publishes `site/` without install or build commands. Production is deployed by running `vercel --prod` from the `quran-art-publish` worktree (branch `feat/quran-one-rule`), not by Git integration from `main`. The Netlify configuration remains as an alternative static-host setup.
+
+Caching (`vercel.json` headers, last match wins): site JS and CSS are `public, max-age=0, must-revalidate` because the modules import each other by plain, unversioned paths; `/vendor/`, `/fonts/`, `/assets/` and `/quran/(thumbs|artworks)/` are cached for 30 days with 7 days of stale-while-revalidate, so replaced files there need a new path. In particular, a three.js upgrade (r180 today) must move `/vendor/three/` to a new path and update the import map and modulepreloads in `site/Toga/index.html`.
 
 ## Project map
 
@@ -92,7 +94,7 @@ suph.app sends product analytics and error tracking to PostHog through the same-
 - `site/projects/ph.js`: PostHog loader and `suphTrack`; host-gated to suph.app, `api_host: '/ingest'`, with autocapture, heatmaps, dead clicks, surveys and session recording pinned off in `posthog.init`. Toga room ids are kept out in two layers: the SDK masks `room` and `theme` query values as `<masked>` (`mask_personal_data_properties` + `custom_personal_data_properties`; this covers `$current_url`, the nested web-vitals URLs and heatmap keys, and also masks ad click ids such as `gclid`), then `before_send` walks the whole event (nested objects and arrays, 8 levels) and removes the `room` and `theme` parameters from every URL on suph.app, from every `*url*`/`*referrer*` property, and from URL-shaped object keys. Other query parameters are kept.
 - `site/fonts/`, `site/vendor/three/`: self-hosted web fonts and the three.js build.
 - `site/Toga/index.html`: game metadata, styles, and pinned browser imports.
-- `site/quran/` and `site/surah/`: Quran Art gallery, named surah pages, and artwork exports.
+- `site/quran/` and `site/surah/`: Quran Art gallery, named surah pages, and artwork exports (the live studies). Rebuild them with `bash projects/quran-art/scripts/live-studies/build-live-studies.sh`; the unreleased one-rule generator is `projects/quran-art/scripts/build_site.js`. Source, provenance, and regeneration instructions are in [`projects/quran-art/README.md`](projects/quran-art/README.md).
 - `site/app.js`: game interface, saves, turn orchestration, and room integration.
 - `site/presentation.js`: medieval/Roman labels, contender identities, and original SVG emblems.
 - `site/experience.js`: welcome menu, five-chapter guide, device read-aloud, sound controls, and atmosphere settings.
@@ -117,6 +119,6 @@ CI checks JavaScript syntax, runs Node tests, and runs the browser verification 
 
 ## Quran Art
 
-The Quran gallery lives at `/quran`, with a page for each surah at `/surah/{name}` (for example `/surah/al-fajr`). Each page compares Verse Shell, Word Current, and Verse Lines, with one verse selector that highlights the same verse in all three, the mathematics shown with each artwork, and an SVG download for every artwork. All 114 surahs and 342 artworks are live. A one-rule redesign (Rays, Rows, and Spiral) exists in the generator source, `projects/quran-art/scripts/build_site.js`, but is unreleased pending approval; the live pages are rebuilt with `bash projects/quran-art/scripts/live-studies/build-live-studies.sh`.
+The Quran gallery lives at `/quran`, with a page for each surah at `/surah/{name}` (for example `/surah/al-fajr`). Each page compares Verse Shell, Word Current, and Verse Lines, with one verse selector that highlights the same verse in all three, the mathematics shown with each artwork, and an SVG download for every artwork. All 114 surahs and 342 artworks are live. A one-rule redesign (Rays, Rows, and Spiral) exists in the generator source but is unreleased pending approval.
 
-Source, provenance, and regeneration instructions are in [`projects/quran-art/README.md`](projects/quran-art/README.md). Public output is isolated in `site/quran/` and `site/surah/`; the Toga game is unchanged.
+The text source, counting rules, and the mathematics of each study are in the [Quran Art README](projects/quran-art/README.md) and its [method notes](projects/quran-art/data/method.md).
