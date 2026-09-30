@@ -21,7 +21,7 @@ const {Resvg} = require('@resvg/resvg-js');
 const meta = require('./page-meta');
 const output = path.resolve(root, '../../site/quran');
 const detailRoot = path.resolve(root, '../../site/surah');
-const version = 'one-rule';
+const version = 'one-rule-2';
 const dateCreated = '2026-09-28'; // when the current studies' geometry was drawn
 fs.mkdirSync(output, {recursive:true});
 for (const dir of ['artworks','thumbs']) fs.mkdirSync(path.join(output,dir),{recursive:true});

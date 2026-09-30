@@ -133,4 +133,7 @@ edit('app.js', [
     track('surah_study_switched', { id: chapter.id, study: kind });
     byId('dialog-title')"""),
 ])
+# Cache-buster: returning visitors must fetch the new app.js (PostHog events) straight away.
+edit(build, [('/quran/app.js?v=verse-lines', '/quran/app.js?v=verse-lines-2')])
+edit('scripts/detail-template.js', [('/quran/app.js?v=verse-lines', '/quran/app.js?v=verse-lines-2')])
 print('patched live-studies generator')

@@ -34,7 +34,7 @@ cd the-toga-is-dead
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000** for the gallery, **/Toga** for the game, and **/quran** for Quran Art. The static site needs no npm installation or build step. Initial game loading needs an internet connection for pinned browser libraries and web fonts. Refresh after editing files.
+Open **http://127.0.0.1:3000** for the gallery, **/Toga** for the game, and **/quran** for Quran Art. The static site needs no npm installation or build step. Fonts and three.js are self-hosted; only PeerJS (from esm.sh, for online rooms) and the PostHog proxy are external. Refresh after editing files.
 
 `npm test` runs the dependency-free engine, room transport, and audio lifecycle tests. The development server uses Node built-ins and serves only `site/`.
 
@@ -84,7 +84,11 @@ Host snapshots preserve the game, original invitation ID, player choices, and re
 
 ## Project map
 
+suph.app sends product analytics and error tracking to PostHog through the same-origin `/ingest` proxy; it sets no cookies beyond PostHog's own and only loads on the production host.
+
 - `site/index.html`, `site/projects/`: minimal gallery and video dither renderer.
+- `site/projects/ph.js`: PostHog loader and `suphTrack`; host-gated to suph.app, `api_host: '/ingest'`, `disable_surveys: true`, and strips `room`/`theme` query values from every event URL.
+- `site/fonts/`, `site/vendor/three/`: self-hosted web fonts and the three.js build.
 - `site/Toga/index.html`: game metadata, styles, and pinned browser imports.
 - `site/quran/` and `site/surah/`: Quran Art gallery, named surah pages, and artwork exports.
 - `site/app.js`: game interface, saves, turn orchestration, and room integration.
