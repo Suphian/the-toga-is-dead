@@ -3,7 +3,8 @@
   const root = document.getElementById('suph-home-concept');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const settings = { texture: 'Dither', motion: !reduced, grain: 'Fine' };
-  const clip = name => ['/assets/projects/' + name + '.webm', '/assets/projects/' + name + '.mp4'];
+  // MP4 first: the H.264 set is ~78 KB smaller in total than the VP9 WebM set (1,155,311 vs 1,233,868 B).
+  const clip = name => ['/assets/projects/' + name + '.mp4', '/assets/projects/' + name + '.webm'];
   const projects = ['toga', 'quran', 'coming'];
   const videoStatus = projects.map(function (name) { return root.querySelector('[data-video-status="' + name + '"]'); });
 
