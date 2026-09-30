@@ -1,0 +1,12 @@
+# `vercel --prod` uploads the project root but serves only site/ (vercel.json outputDirectory).
+# Keep sources, tooling, tests and local notes out of the upload. No pattern may match site/.
+/assets-src/
+/projects/quran-art/node_modules/
+/node_modules/
+/test/
+/test-results/
+/playwright-report/
+/browser-results/
+/docs/
+/.github/
+/.superpowers/
