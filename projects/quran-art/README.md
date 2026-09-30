@@ -4,6 +4,17 @@ Three arrangements of one rule for every surah: **114 surahs and 342 artworks**.
 
 This directory contains the source and saved text data. The generated public files are in `../../site/quran/` and `../../site/surah/`. They are a self-contained addition to the existing static site. The Toga game remains at `/Toga`.
 
+## Rebuilding the live studies
+
+The generator at HEAD emits the one-rule prototype (Rays, Rows, Spiral), which is not approved. The committed `site/quran/` and `site/surah/` output is the studies from commit `1fa0c9c` (Verse Shell, Word Current, Verse Lines) plus the crawl layer from `scripts/page-meta.js`: canonical URLs, descriptions, social tags, JSON-LD and lossless WebP thumbnails. To regenerate it, run `npm ci` in this directory once, then from the repository root:
+
+```sh
+bash projects/quran-art/scripts/live-studies/build-live-studies.sh
+node scripts/build-crawler-files.mjs
+```
+
+When the one-rule studies are approved, run `node scripts/build_site.js` instead (below), delete `scripts/live-studies/`, and remove the `DOCS_REF` default in `scripts/build-crawler-files.mjs`.
+
 ## Regenerate
 
 Use Node.js 24 or newer. From this directory:
@@ -13,7 +24,7 @@ npm ci
 node scripts/build_site.js
 ```
 
-The build reads the checked-in dataset without making network requests. It writes the gallery, 114 detail pages, 342 downloadable SVG artworks (1200×1200 exports of a 600-unit square frame), and 342 PNG thumbnails (640×640). The SVGs use the same geometry as the interactive detail pages. The raster thumbnails are rendered from those SVGs with pinned `@resvg/resvg-js`; they are not AI-generated images.
+The build reads the checked-in dataset without making network requests. It writes the gallery, 114 detail pages, 342 downloadable SVG artworks (1200×1200 exports of a 600-unit square frame), and 342 PNG thumbnails (640×640), each with a pixel-identical lossless WebP copy. The SVGs use the same geometry as the interactive detail pages. The raster thumbnails are rendered from those SVGs with pinned `@resvg/resvg-js`; they are not AI-generated images.
 
 To recalculate the dataset from its saved source responses, run `python scripts/derive_data.py`. Add `--fetch` only when intentionally replacing the source snapshots with a fresh Quran.com response. Review the resulting data changes before rebuilding. The data script validates chapter ordering, each chapter's verse count, and all 6,236 numbered verses.
 

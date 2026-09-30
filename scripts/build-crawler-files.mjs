@@ -3,7 +3,7 @@
 //
 //   node scripts/build-crawler-files.mjs            (dates use today's local date)
 //   BUILD_DATE=2026-09-29 node scripts/build-crawler-files.mjs
-//   DOCS_REF=1fa0c9c node scripts/build-crawler-files.mjs   (llms-full.txt documents as of a commit)
+//   DOCS_REF= node scripts/build-crawler-files.mjs   (Quran Art documents from the working tree)
 //
 // Idempotent: the same inputs and date give byte-identical files, and an existing IndexNow key
 // is reused. The page list is derived from projects/quran-art/data/surahs.json, and every page must
@@ -70,10 +70,12 @@ const quranSummary = description('quran/index.html');
 // ---- Markdown documents for llms-full.txt ----
 // Headings move down two levels to sit under "## Project documents"; repository-relative links
 // become plain text (the linked documents are included here) and site-root links become absolute.
-// DOCS_REF reads the documents at a git commit instead of the working tree, so llms-full.txt can
-// describe the Quran studies the site actually serves while a newer generator awaits approval.
-const docsRef = process.env.DOCS_REF;
-const readDocument = path => docsRef
+// The documents that describe the Quran studies are read at DOCS_REF, so llms-full.txt matches the
+// studies the site serves; the rest (and all of them when DOCS_REF is empty) come from the working tree.
+const docsRef = process.env.DOCS_REF ?? '1fa0c9c'; // live studies; remove when one-rule ships
+const studyDocuments = new Set(['README.md', 'projects/quran-art/README.md', 'projects/quran-art/data/method.md']);
+const atRef = path => Boolean(docsRef) && studyDocuments.has(path);
+const readDocument = path => atRef(path)
   ? execFileSync('git', ['show', `${docsRef}:${path}`], { cwd: repo, encoding: 'utf8' }).replace(/\r\n/g, '\n')
   : read(path);
 const document = path => {
@@ -84,7 +86,7 @@ const document = path => {
     if (/^\s*(```|~~~)/.test(line)) fenced = !fenced;
     if (!fenced && /^#{1,6}\s/.test(line)) {
       lines.push(line.replace(/^(#{1,6})/, hashes => '#'.repeat(Math.min(6, hashes.length + 2))));
-      if (!sourced) lines.push('', `From \`${path}\` in the suph.app repository${docsRef ? ` at commit ${docsRef}` : ''}.`);
+      if (!sourced) lines.push('', `From \`${path}\` in the suph.app repository${atRef(path) ? ` at commit ${docsRef}` : ''}.`);
       sourced = true;
       continue;
     }
@@ -206,4 +208,4 @@ for (const [name, lines] of Object.entries(files)) {
   mkdirSync(dirname(path), { recursive: true });
   writeFileSync(path, name === `${indexNowKey}.txt` ? indexNowKey : `${lines.join('\n')}\n`, 'utf8');
 }
-console.log(JSON.stringify({ date: buildDate, docs: docsRef ?? 'working tree', pages: pages.length, indexNowKey, files: Object.keys(files) }));
+console.log(JSON.stringify({ date: buildDate, docs: docsRef || 'working tree', pages: pages.length, indexNowKey, files: Object.keys(files) }));
