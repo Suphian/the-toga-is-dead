@@ -1,4 +1,16 @@
 'use strict';
+// Guard: this generator emits the one-rule studies (Rays, Rows, Spiral), which are not approved.
+// The committed site/quran and site/surah output is the live 1fa0c9c studies; rebuild those with
+// scripts/live-studies/build-live-studies.sh (it builds the archived 1fa0c9c generator, not this file).
+if (process.env.ONE_RULE_APPROVED !== '1') {
+  console.error([
+    'build_site.js stopped: it emits the one-rule studies (Rays, Rows, Spiral), which are not approved.',
+    'The committed site/quran and site/surah pages are the live 1fa0c9c studies (Verse Shell, Word Current, Verse Lines).',
+    'Rebuild them from the repository root with: bash projects/quran-art/scripts/live-studies/build-live-studies.sh',
+    'Once the one-rule studies are approved, run: ONE_RULE_APPROVED=1 node scripts/build_site.js',
+  ].join('\n'));
+  process.exit(1);
+}
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');

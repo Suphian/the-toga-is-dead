@@ -13,7 +13,7 @@ bash projects/quran-art/scripts/live-studies/build-live-studies.sh
 node scripts/build-crawler-files.mjs
 ```
 
-When the one-rule studies are approved, run `node scripts/build_site.js` instead (below), delete `scripts/live-studies/`, and remove the `DOCS_REF` default in `scripts/build-crawler-files.mjs`.
+When the one-rule studies are approved, run `ONE_RULE_APPROVED=1 node scripts/build_site.js` instead (below), delete `scripts/live-studies/`, drop the `ONE_RULE_APPROVED` guard at the top of `scripts/build_site.js`, and remove the `DOCS_REF` default in `scripts/build-crawler-files.mjs`. Until then `scripts/build_site.js` stops with a message unless `ONE_RULE_APPROVED=1` is set, so it cannot overwrite the live pages by accident.
 
 ## Regenerate
 
@@ -21,7 +21,7 @@ Use Node.js 24 or newer. From this directory:
 
 ```sh
 npm ci
-node scripts/build_site.js
+ONE_RULE_APPROVED=1 node scripts/build_site.js   # only once the one-rule studies are approved
 ```
 
 The build reads the checked-in dataset without making network requests. It writes the gallery, 114 detail pages, 342 downloadable SVG artworks (1200×1200 exports of a 600-unit square frame), and 342 PNG thumbnails (640×640), each with a pixel-identical lossless WebP copy. The SVGs use the same geometry as the interactive detail pages. The raster thumbnails are rendered from those SVGs with pinned `@resvg/resvg-js`; they are not AI-generated images.

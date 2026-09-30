@@ -3,7 +3,8 @@
 # 1fa0c9c, which is what suph.app serves) with the crawl layer from scripts/page-meta.js, and copy
 # the output into site/quran and site/surah. The generator at HEAD emits the one-rule prototype
 # (Rays / Rows / Spiral), which is not approved; use this script until it is, then run
-# `node scripts/build_site.js` instead and delete this directory.
+# `ONE_RULE_APPROVED=1 node scripts/build_site.js` instead and delete this directory. HEAD's
+# build_site.js refuses to run without that variable; this script builds the archived 1fa0c9c copy.
 #   usage (from anywhere): bash projects/quran-art/scripts/live-studies/build-live-studies.sh
 # Needs git, python and `npm ci` in projects/quran-art (for @resvg/resvg-js and sharp).
 set -euo pipefail
