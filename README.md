@@ -87,7 +87,7 @@ Host snapshots preserve the game, original invitation ID, player choices, and re
 suph.app sends product analytics and error tracking to PostHog through the same-origin `/ingest` proxy; it sets no cookies beyond PostHog's own and only loads on the production host.
 
 - `site/index.html`, `site/projects/`: minimal gallery and video dither renderer.
-- `site/projects/ph.js`: PostHog loader and `suphTrack`; host-gated to suph.app, `api_host: '/ingest'`, `disable_surveys: true`, and strips `room`/`theme` query values from every event URL.
+- `site/projects/ph.js`: PostHog loader and `suphTrack`; host-gated to suph.app, `api_host: '/ingest'`, with autocapture, heatmaps, dead clicks, surveys and session recording pinned off in `posthog.init`. Toga room ids are kept out in two layers: the SDK masks `room` and `theme` query values as `<masked>` (`mask_personal_data_properties` + `custom_personal_data_properties`; this covers `$current_url`, the nested web-vitals URLs and heatmap keys, and also masks ad click ids such as `gclid`), then `before_send` walks the whole event (nested objects and arrays, 8 levels) and removes the `room` and `theme` parameters from every URL on suph.app, from every `*url*`/`*referrer*` property, and from URL-shaped object keys. Other query parameters are kept.
 - `site/fonts/`, `site/vendor/three/`: self-hosted web fonts and the three.js build.
 - `site/Toga/index.html`: game metadata, styles, and pinned browser imports.
 - `site/quran/` and `site/surah/`: Quran Art gallery, named surah pages, and artwork exports.

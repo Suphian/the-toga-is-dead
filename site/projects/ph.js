@@ -20,30 +20,61 @@
   // page (they land on /Toga), so the redirect itself must not count as a pageview.
   if (location.pathname === '/' && /[?&](room|theme)=/.test(location.search)) return;
 
-  // Toga invitation links carry a private room id (/Toga?room=<id>&theme=...). Strip `room` and
-  // `theme` from every URL-shaped property before an event leaves the browser: $current_url,
-  // $referrer, $initial_referrer, $initial_current_url, $session_entry_* and the $set/$set_once
-  // copies. Other query parameters are left alone.
+  // Toga invitation links carry a private room id (/Toga?room=<id>&theme=...); hosts get it in
+  // the address bar via history.replaceState. Two layers keep it out of PostHog:
+  // 1. SDK masking (init options below): mask_personal_data_properties + custom_personal_data_properties
+  //    make posthog-js write room=<masked> / theme=<masked> into $current_url, $initial_current_url,
+  //    the nested $web_vitals_<metric>_event URLs and heatmap keys (it also masks ad click ids
+  //    such as gclid/fbclid).
+  // 2. before_send (below) then walks the whole event, plain objects and arrays up to MAX_DEPTH
+  //    levels, and removes the room and theme parameters (any case, percent-decoded name) from
+  //    every string that is a URL on this host (absolute or root-relative), from every string
+  //    under a key containing "url" or "referrer" (any host), and from object keys that are URLs on
+  //    this host. Other query parameters are kept. It never throws and always returns the event.
   var PRIVATE_PARAMS = /^(room|theme)$/i;
+  var URL_KEY = /url|referrer/i;
+  var MAX_DEPTH = 8;
+  function paramName(pair) {
+    var name = pair.split('=')[0].replace(/\+/g, ' ');
+    try { return decodeURIComponent(name); } catch (error) { return name; }
+  }
   function stripPrivateParams(value) {
     if (typeof value !== 'string' || value.indexOf('?') === -1) return value;
     var m = /^([^?#]*)\?([^#]*)(#[\s\S]*)?$/.exec(value);
     if (!m) return value;
     var kept = m[2].split('&').filter(function (pair) {
-      return pair && !PRIVATE_PARAMS.test(pair.split('=')[0].replace(/\+/g, ' '));
+      return pair && !PRIVATE_PARAMS.test(paramName(pair));
     });
     return m[1] + (kept.length ? '?' + kept.join('&') : '') + (m[3] || '');
   }
-  function scrub(bag) {
-    if (!bag || typeof bag !== 'object') return;
-    Object.keys(bag).forEach(function (key) {
-      if (/url|referrer/i.test(key)) bag[key] = stripPrivateParams(bag[key]);
+  function isOwnUrl(value) {
+    if (value.indexOf('?') === -1 || /\s/.test(value)) return false;
+    if (/^\/(?!\/)/.test(value)) return true;
+    var m = /^(?:https?:)?\/\/(?:[^@\/?#]*@)?([^\/?#:]*)/i.exec(value);
+    return !!m && m[1].toLowerCase() === location.hostname;
+  }
+  function scrub(node, depth) {
+    if (!node || typeof node !== 'object' || depth > MAX_DEPTH) return;
+    var isArray = Array.isArray(node);
+    if (!isArray && Object.prototype.toString.call(node) !== '[object Object]') return;
+    Object.keys(node).forEach(function (key) {
+      var value = node[key];
+      if (typeof value === 'string') {
+        if ((!isArray && URL_KEY.test(key)) || isOwnUrl(value)) node[key] = stripPrivateParams(value);
+      } else {
+        scrub(value, depth + 1);
+      }
+      if (isArray || !isOwnUrl(key)) return;
+      var clean = stripPrivateParams(key);
+      if (clean === key) return;
+      var moved = node[key];
+      delete node[key];
+      if (!Object.prototype.hasOwnProperty.call(node, clean)) node[clean] = moved;
+      else if (Array.isArray(node[clean]) && Array.isArray(moved)) node[clean] = node[clean].concat(moved);
     });
   }
   function beforeSend(cap) {
-    try {
-      if (cap) { scrub(cap.properties); scrub(cap.$set); scrub(cap.$set_once); }
-    } catch (error) { /* never drop an event because scrubbing failed */ }
+    try { scrub(cap, 0); } catch (error) { /* never drop an event because scrubbing failed */ }
     return cap;
   }
 
@@ -59,6 +90,11 @@
     autocapture: false,
     disable_session_recording: true,
     disable_surveys: true, // no survey widgets or survey network calls on a gallery + game
+    // Pinned here so the shared project's remote config can never switch these on.
+    enable_heatmaps: false,
+    capture_dead_clicks: false,
+    mask_personal_data_properties: true,
+    custom_personal_data_properties: ['room', 'theme'],
     person_profiles: 'identified_only',
     before_send: beforeSend
   });
