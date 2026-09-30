@@ -64,12 +64,13 @@ test('CSP report-only allow-list', () => {
   }
 });
 
-test('cache rules: 30 days + SWR for static media, 1 hour for js/css, never immutable', () => {
+test('cache rules: 30 days + SWR for static media, revalidate unversioned js/css, never immutable', () => {
   const thirtyDays = 'public, max-age=2592000, stale-while-revalidate=604800';
   for (const source of ['/assets/(.*)', '/quran/(thumbs|artworks)/(.*)', '/fonts/(.*)', '/vendor/(.*)']) {
     assert.equal(headerValue(allHeaders(source), 'Cache-Control'), thirtyDays, source);
   }
-  assert.equal(headerValue(allHeaders('/(.*)\\.(js|css)'), 'Cache-Control'), 'public, max-age=3600, stale-while-revalidate=86400');
+  // Site JS/CSS is imported by plain unversioned paths, so it must revalidate on every load.
+  assert.equal(headerValue(allHeaders('/(.*)\\.(js|css)'), 'Cache-Control'), 'public, max-age=0, must-revalidate');
   assert.ok(!JSON.stringify(config.headers).includes('immutable'));
 });
 
