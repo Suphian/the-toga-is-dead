@@ -4,7 +4,16 @@
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const settings = { texture: 'Dither', motion: !reduced, grain: 'Fine' };
   const clip = name => ['/assets/projects/' + name + '.webm', '/assets/projects/' + name + '.mp4'];
-  const videoStatus = ['toga', 'quran', 'coming'].map(function (name) { return root.querySelector('[data-video-status="' + name + '"]'); });
+  const projects = ['toga', 'quran', 'coming'];
+  const videoStatus = projects.map(function (name) { return root.querySelector('[data-video-status="' + name + '"]'); });
+
+  // Analytics via /projects/ph.js; a no-op unless PostHog runs on suph.app. No personal data.
+  function track(event, props) { if (typeof window.suphTrack === 'function') window.suphTrack(event, props); }
+  root.addEventListener('click', function (event) {
+    const card = event.target.closest('a.suph-project[href]');
+    const status = card && card.querySelector('[data-video-status]');
+    if (status) track('project_card_clicked', { project: status.getAttribute('data-video-status') });
+  });
 
   // Players are created after first paint and an idle moment (1.5 s at the latest) so the
   // decode + dither setup stays off the load path.
@@ -66,6 +75,15 @@
       player.video.addEventListener(event, function () {
         canvases[index].dirty = true;
         scheduleDraw();
+      });
+    });
+    // Each card reports each playback state at most once per page view.
+    const reported = {};
+    [['playing', 'playing'], ['pause', 'paused'], ['error', 'error']].forEach(function (pair) {
+      player.video.addEventListener(pair[0], function () {
+        if (reported[pair[1]]) return;
+        reported[pair[1]] = true;
+        track('gallery_video_state', { project: projects[index], state: pair[1] });
       });
     });
   });

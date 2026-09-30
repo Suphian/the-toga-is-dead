@@ -23,6 +23,12 @@ import { createGameLibrary } from './game-library.js';
   let coachEnabled = true;
   try { coachEnabled=localStorage.getItem('togaisdead.coach.v1')!=='off'; } catch {}
   const storageKey = 'ceoisdead.session.v1';
+  // Analytics via /projects/ph.js: a no-op unless PostHog runs on suph.app. Counts only, never names.
+  // Online tables are counted once, on the host.
+  let trackedStart='', trackedFinish='';
+  function track(event,props){try{window.suphTrack?.(event,props);}catch{}}
+  function trackStart(){if(trackedStart===game.seed)return;trackedStart=game.seed;track('toga_game_started',{mode,players:game.players.length});}
+  function trackFinish(before){if(before.phase==='ended'||game.phase!=='ended'||trackedFinish===game.seed)return;trackedFinish=game.seed;track('toga_game_finished',{turns:game.log.filter(entry=>entry.type==='play'||entry.type==='pass').length});}
 
   function newSeed() { return crypto.randomUUID().slice(0,8); }
   function regionName(id) { return regionTitle(theme,id); }
@@ -300,6 +306,8 @@ import { createGameLibrary } from './game-library.js';
       const before=game;game=applyAction(game,id);history.push(id);selectedCard=null;selectedAction=null;
       if(game.phase!=='summon')selectedRegion=null;
       if(mode==='online'&&room.isHost)room.broadcast(game);
+      if(before.revision===0&&mode!=='online')trackStart();
+      trackFinish(before);
       render();experience?.transition(before,game);
     }catch(error){toast(error.message);}
   }
@@ -310,7 +318,7 @@ import { createGameLibrary } from './game-library.js';
     clearTimeout(aiTimer);scheduleAI.revision=revision;scheduleAI.epoch=epoch;
     aiTimer=setTimeout(()=>{aiTimer=null;
       if(epoch!==sessionEpoch||revision!==game.revision||mode!=='solo'||game.activePlayer===0)return;
-      try{const move=chooseAIAction(game);if(move){const before=game;game=applyAction(game,move);history.push(move.id);selectedCard=null;selectedAction=null;render();experience?.transition(before,game);}}catch(error){toast('The court could not move: '+error.message);}
+      try{const move=chooseAIAction(game);if(move){const before=game;game=applyAction(game,move);history.push(move.id);selectedCard=null;selectedAction=null;trackFinish(before);render();experience?.transition(before,game);}}catch(error){toast('The court could not move: '+error.message);}
     },game.phase==='summon'?500:850);
   }
   function onClick(event) {
@@ -339,7 +347,7 @@ import { createGameLibrary } from './game-library.js';
       case'confirm-move':if(selectedAction)advance(selectedAction);break;
       case'view-3d':case'view-top':view=button.dataset.command==='view-top'?'top':'3d';scene?.setView(view);for(const b of document.querySelectorAll('.camera-controls button[aria-pressed]')){const active=b===button;b.classList.toggle('is-selected',active);b.setAttribute('aria-pressed',String(active));}break;
       case'create-room':$('#invite-modal').close();$('#new-game-form').elements.mode.value='online';updateNewGameForm();$('#new-game-modal').showModal();break;
-      case'start-table':if(room?.start())$('#invite-modal').close();break;
+      case'start-table':if(room?.start()){$('#invite-modal').close();trackStart();}break;
       case'rejoin':if(libraryId)resumeSavedGame(libraryId);else if(joiningRoomId)joinRoom(joiningRoomId);break;
       case'rename':{const name=$('#lobby-name').value.trim();if(room?.rename(name)){try{localStorage.setItem('ceoisdead.name',name);}catch{}toast('Your name is updated.');}break;}
       case'copy-link':copyLink();break;
@@ -369,6 +377,7 @@ import { createGameLibrary } from './game-library.js';
     resetGame(nextMode,names,String(form.get('theme')),nextCharacters);
     try{localStorage.setItem('ceoisdead.name',names[0]);localStorage.setItem('togaisdead.character',String(characters[0]));}catch{}
     $('#new-game-modal').close();
+    if(nextMode!=='online')trackStart();
     if(nextMode==='online'){startRoom();$('#invite-modal').showModal();}
   }
   function resetGame(nextMode,names,nextTheme=theme,nextCharacters=characters) {
@@ -451,6 +460,7 @@ import { createGameLibrary } from './game-library.js';
       const result=await makeRoom().host(game,{character:characters[0]});
       if(epoch!==sessionEpoch)return;
       const inviteUrl=new URL(result.url);inviteUrl.searchParams.set('theme',theme);roomLink=inviteUrl.href;
+      track('toga_invite_created',{players:game.players.length});
       window.history.replaceState({},'',roomLink);
       updateInvite();render();
     }catch(error){if(epoch!==sessionEpoch)return;roomStatus=error.message;roomReady=false;updateInvite();toast(error.message);}
