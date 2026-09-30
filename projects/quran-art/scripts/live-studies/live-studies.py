@@ -4,8 +4,8 @@ The live studies are Verse Shell, Word Current and Verse Lines. build-live-studi
 from projects/quran-art of a pristine `git archive 1fa0c9c projects/quran-art` tree; it edits that
 copy's build_site.js, detail-template.js and app.js (head metadata, the /projects/ph.js analytics
 tag, <picture> + WebP thumbnails, the gallery's <source> srcset update, and the PostHog events
-surah_viewed / surah_study_switched / artwork_downloaded mirrored from HEAD's app.js) and leaves every
-visible string unchanged.
+surah_viewed / surah_study_switched / gallery_study_switched / artwork_downloaded mirrored from
+HEAD's app.js) and leaves every visible string unchanged.
 Delete this directory when the one-rule studies are approved and built with build_site.js.
 """
 
@@ -111,8 +111,8 @@ edit('app.js', [
     ("""    document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => setMode(button.dataset.kind)));
 """,
      """    document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => {
-      // The gallery switches every card at once, so there is no surah id.
-      if (button.getAttribute('aria-pressed') !== 'true') track('surah_study_switched', { id: null, study: button.dataset.kind });
+      // The gallery switches every card at once; surah pages report surah_study_switched.
+      if (button.getAttribute('aria-pressed') !== 'true') track('gallery_study_switched', { study: button.dataset.kind });
       setMode(button.dataset.kind);
     }));
 """),

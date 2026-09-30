@@ -17,8 +17,8 @@
       });
     };
     document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => {
-      // The gallery switches every card at once, so there is no surah id.
-      if (button.getAttribute('aria-pressed') !== 'true') track('surah_study_switched', { id: null, study: button.dataset.kind });
+      // The gallery switches every card at once; surah pages report surah_study_switched.
+      if (button.getAttribute('aria-pressed') !== 'true') track('gallery_study_switched', { study: button.dataset.kind });
       setMode(button.dataset.kind);
     }));
     byId('search').addEventListener('input', event => {
