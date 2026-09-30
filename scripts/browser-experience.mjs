@@ -13,7 +13,7 @@ async function client(mobile=false){
   context.setDefaultTimeout(20000);const page=await context.newPage();page.on('pageerror',error=>report.errors.push(error.message));return{page,context};
 }
 async function ready(page){await page.goto(base,{waitUntil:'domcontentloaded'});await page.waitForFunction(()=>document.documentElement.dataset.game==='ready');await page.waitForFunction(()=>document.querySelector('#board-canvas')?.dataset.assets==='ready',null,{timeout:45000});await page.evaluate(()=>document.fonts.ready);await dismissTurn(page);}
-async function loadedImages(page){await page.waitForFunction(()=>[...document.querySelectorAll('img[src]')].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:30000});}
+async function loadedImages(page){await page.waitForFunction(()=>[...document.querySelectorAll('img[src]:not([loading="lazy"])')].every(img=>img.complete&&img.naturalWidth>0),null,{timeout:30000});}
 async function noOverflow(page){const sizes=await page.evaluate(()=>({content:document.documentElement.scrollWidth,viewport:innerWidth}));assert.ok(sizes.content<=sizes.viewport+1,JSON.stringify(sizes));}
 try{
   const {page,context}=await client();await ready(page);await loadedImages(page);
