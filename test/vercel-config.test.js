@@ -72,3 +72,13 @@ test('cache rules: 30 days + SWR for static media, 1 hour for js/css, never immu
   assert.equal(headerValue(allHeaders('/(.*)\\.(js|css)'), 'Cache-Control'), 'public, max-age=3600, stale-while-revalidate=86400');
   assert.ok(!JSON.stringify(config.headers).includes('immutable'));
 });
+
+test('long-TTL static rules come after the generic js/css rule (last match wins)', () => {
+  const indexOf = (source) => config.headers.findIndex((rule) => rule.source === source && !rule.has);
+  const generic = indexOf('/(.*)\\.(js|css)');
+  assert.ok(generic >= 0, 'generic js/css rule exists');
+  for (const source of ['/vendor/(.*)', '/fonts/(.*)', '/assets/(.*)', '/quran/(thumbs|artworks)/(.*)']) {
+    const index = indexOf(source);
+    assert.ok(index > generic, `${source} (index ${index}) follows the js/css rule (index ${generic})`);
+  }
+});
