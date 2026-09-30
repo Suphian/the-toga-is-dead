@@ -96,7 +96,7 @@
         3: 'The browser could not decode this video.',
         4: 'The video format or source URL is unsupported.'
       };
-      playbackError = reasons[code] || 'The video could not be loaded.';
+      playbackError = reasons[code] || playbackError || 'The video could not be loaded.';
     });
     video.addEventListener('loadeddata', function () {
       lastFrameTime = -1;
@@ -115,6 +115,8 @@
       // With <source> children, load failures surface on the last one, not on the video.
       if (index === sourceUrls.length - 1) element.addEventListener('error', function () {
         playbackError = 'The video format or source URL is unsupported.';
+        // <source> errors do not bubble; re-signal on the video so listeners (home.js) redraw the status.
+        video.dispatchEvent(new Event('error'));
       });
       video.appendChild(element);
     });

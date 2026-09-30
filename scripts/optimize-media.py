@@ -57,7 +57,8 @@ def panorama():
 
 
 def cover():
-    # Keeps path + PNG format: head tags reference /assets/toga-cover.png.
+    # PNG keeps its path: head tags still reference /assets/toga-cover.png (retained temporarily).
+    # toga-cover.jpg (1200x629, q85, ~200 KB) is the Open Graph image going forward.
     src = Image.open(SRC / "toga-cover.png").convert("RGB")
     # 1200 px wide (same 1732:908 aspect) and a 64-colour palette get it under the 300 KB budget.
     im = resize(src, 1200).quantize(colors=64, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG)
