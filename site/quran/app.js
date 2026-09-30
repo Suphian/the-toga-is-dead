@@ -8,6 +8,8 @@
       document.querySelectorAll('.mode').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.kind === kind)));
       cards.forEach(card => {
         const img = card.querySelector('img');
+        const source = card.querySelector('source');
+        if (source) source.srcset = `/quran/thumbs/${card.dataset.id}-${kind}.webp`;
         img.src = `/quran/thumbs/${card.dataset.id}-${kind}.png`;
         img.alt = `${card.dataset.name}: ${kind === 'shell' ? 'Verse Shell' : kind === 'current' ? 'Word Current' : 'Verse Lines'}`;
       });
