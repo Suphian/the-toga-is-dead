@@ -1,6 +1,8 @@
 'use strict';
 (() => {
   const byId = id => document.getElementById(id);
+  // Analytics via /projects/ph.js: a no-op unless PostHog runs on suph.app. No personal data.
+  const track = (event, props) => { if (typeof window.suphTrack === 'function') window.suphTrack(event, props); };
   const kinds = ['shell', 'current', 'lines'];
   if (document.body.dataset.page === 'gallery') {
     const cards = [...document.querySelectorAll('.surah-card')];
@@ -14,7 +16,11 @@
         img.alt = `${card.dataset.name}: ${kind === 'shell' ? 'Verse Shell' : kind === 'current' ? 'Word Current' : 'Verse Lines'}`;
       });
     };
-    document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => setMode(button.dataset.kind)));
+    document.querySelectorAll('.mode').forEach(button => button.addEventListener('click', () => {
+      // The gallery switches every card at once, so there is no surah id.
+      if (button.getAttribute('aria-pressed') !== 'true') track('surah_study_switched', { id: null, study: button.dataset.kind });
+      setMode(button.dataset.kind);
+    }));
     byId('search').addEventListener('input', event => {
       const query = event.target.value.toLocaleLowerCase().trim().replace(/[-'’]/g, '');
       let count = 0;
@@ -29,6 +35,13 @@
     return;
   }
   const chapter = JSON.parse(byId('chapter-data').textContent);
+  track('surah_viewed', { id: chapter.id, slug: chapter.slug });
+  document.addEventListener('click', event => {
+    const link = event.target.closest('a[download][href^="/quran/artworks/"]');
+    if (!link) return;
+    const [id, study] = link.getAttribute('href').split('/').pop().replace(/[.]svg$/, '').split('-');
+    track('artwork_downloaded', { id: Number(id), study });
+  });
   const geometry = window.QuranGeometry;
   const model = geometry.build(chapter);
   const initial = Number(new URLSearchParams(location.search).get('verse'));
@@ -77,6 +90,7 @@
   byId('next-verse').addEventListener('click', () => {selected = Math.min(chapter.verses.length, selected + 1); render();});
   byId('surah-select').addEventListener('change', event => {location.href = `/surah/${event.target.value}`;});
   kinds.forEach(kind => byId(`${kind}-art`).addEventListener('click', () => {
+    track('surah_study_switched', { id: chapter.id, study: kind });
     byId('dialog-title').textContent = `${chapter.name} · ${{shell:'Verse Shell',current:'Word Current',lines:'Verse Lines'}[kind]}`;
     byId('dialog-art').innerHTML = geometry.markup(chapter,kind,{selected,background:false});
     byId('art-dialog').showModal();
