@@ -62,6 +62,14 @@ def cover():
     # 1200 px wide (same 1732:908 aspect) and a 64-colour palette get it under the 300 KB budget.
     im = resize(src, 1200).quantize(colors=64, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG)
     save(im, OUT / "toga-cover.png", optimize=True)
+    # Lossy JPEG replacement (PNG above stays until its last reference is removed).
+    # Quality steps down from 85 until the file fits the 300,000 B budget.
+    jpg = OUT / "toga-cover.jpg"
+    for q in (85, 80, 78):
+        save(resize(src, 1200), jpg, quality=q, optimize=True, progressive=True)
+        if jpg.stat().st_size <= 300_000:
+            break
+    print(f"  toga-cover.jpg quality used: {q}")
 
 
 def videos():

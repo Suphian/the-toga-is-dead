@@ -82,7 +82,7 @@ export function createTurnFeedback({ root = document.body, onDismiss } = {}) {
     const hasPortrait = typeof character?.image === 'string' && /^[a-z0-9_-]+$/i.test(character.image);
     portrait.hidden = !hasPortrait;
     find(modal, '.turn-feedback-portrait > span').hidden = hasPortrait;
-    if (hasPortrait) portrait.src = new URL(`./assets/portraits/${character.image}-160.webp`, import.meta.url).href;
+    if (hasPortrait) portrait.src = new URL(`./assets/portraits/${character.image}-320.webp`, import.meta.url).href;
     modal.dataset.turn = key;
     hideToast();
     modal.showModal();
