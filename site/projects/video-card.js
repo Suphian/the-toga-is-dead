@@ -104,7 +104,20 @@
     });
     video.addEventListener('seeked', function () { lastFrameTime = -1; });
     video.addEventListener('playing', function () { playbackError = null; });
-    video.src = sourceUrl;
+    // sourceUrl is one URL or a list of URLs; the browser plays the first format it supports.
+    var sourceUrls = Array.isArray(sourceUrl) ? sourceUrl : [sourceUrl];
+    if (sourceUrls.length === 1) video.src = sourceUrls[0];
+    else sourceUrls.forEach(function (url, index) {
+      var element = document.createElement('source');
+      element.src = url;
+      if (/\.webm$/i.test(url)) element.type = 'video/webm; codecs="vp9"';
+      else if (/\.mp4$/i.test(url)) element.type = 'video/mp4';
+      // With <source> children, load failures surface on the last one, not on the video.
+      if (index === sourceUrls.length - 1) element.addEventListener('error', function () {
+        playbackError = 'The video format or source URL is unsupported.';
+      });
+      video.appendChild(element);
+    });
     (document.body || document.documentElement).appendChild(video);
     video.load();
     play();

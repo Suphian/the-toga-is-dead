@@ -3,22 +3,44 @@
   const root = document.getElementById('suph-home-concept');
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   const settings = { texture: 'Dither', motion: !reduced, grain: 'Fine' };
-  const players = [
-    window.createSuphVideoCard('/assets/projects/toga.mp4', { cropX: .52, cropY: .48, gamma: .72, contrast: 1.04, feather: .035, redAccent: true }),
-    window.createSuphVideoCard('/assets/projects/quran.mp4', { cropX: .63, cropY: .48, gamma: .88, contrast: 1.13, feather: .035 }),
-    window.createSuphVideoCard('/assets/projects/coming.mp4', { gamma: .72, whitePoint: .78, contrast: 1.1, feather: .035, redAccent: true })
-  ];
+  const clip = name => ['/assets/projects/' + name + '.webm', '/assets/projects/' + name + '.mp4'];
   const videoStatus = ['toga', 'quran', 'coming'].map(function (name) { return root.querySelector('[data-video-status="' + name + '"]'); });
+
+  // Players are created after first paint and an idle moment (1.5 s at the latest) so the
+  // decode + dither setup stays off the load path.
+  let started = false;
+  function start() {
+    if (started) return;
+    started = true;
+    init();
+  }
+  function whenIdle() {
+    if ('requestIdleCallback' in window) window.requestIdleCallback(start, { timeout: 1500 });
+    else setTimeout(start, 200);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', whenIdle);
+  else whenIdle();
+  setTimeout(start, 1500);
+
+  function init() {
+  const players = [
+    window.createSuphVideoCard(clip('toga'), { cropX: .52, cropY: .48, gamma: .72, contrast: 1.04, feather: .035, redAccent: true }),
+    window.createSuphVideoCard(clip('quran'), { cropX: .63, cropY: .48, gamma: .88, contrast: 1.13, feather: .035 }),
+    window.createSuphVideoCard(clip('coming'), { gamma: .72, whitePoint: .78, contrast: 1.1, feather: .035, redAccent: true })
+  ];
+  // Cards outside the viewport pause and stop drawing; the observer reports the real state on start.
+  const onScreen = players.map(function () { return true; });
   let frameRequest = 0, lastDraw = 0;
   function scheduleDraw() {
     if (!frameRequest && !document.hidden && root.isConnected) frameRequest = requestAnimationFrame(frame);
   }
+  function applyPlayer(index) {
+    const playing = settings.motion && !document.hidden && onScreen[index];
+    // Autoplay failures leave a still image; other cards can continue normally.
+    Promise.resolve(players[index].setPlaying(playing)).then(scheduleDraw, scheduleDraw);
+  }
   function applySettings() {
-    const playing = settings.motion && !document.hidden;
-    players.forEach(function (player) {
-      // Autoplay failures leave a still image; other cards can continue normally.
-      Promise.resolve(player.setPlaying(playing)).then(scheduleDraw, scheduleDraw);
-    });
+    players.forEach(function (player, index) { applyPlayer(index); });
     if (document.hidden && frameRequest) { cancelAnimationFrame(frameRequest); frameRequest = 0; }
     scheduleDraw();
   }
@@ -27,6 +49,18 @@
     const canvas = root.querySelector('#' + id);
     return { canvas: canvas, ctx: canvas.getContext('2d'), dirty: true, hasFrame: false, time: -1 };
   });
+  if ('IntersectionObserver' in window) {
+    const visibility = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        const index = canvases.findIndex(function (item) { return item.canvas === entry.target; });
+        if (index < 0 || onScreen[index] === entry.isIntersecting) return;
+        onScreen[index] = entry.isIntersecting;
+        if (entry.isIntersecting) canvases[index].dirty = true;
+        applyPlayer(index);
+      });
+    });
+    canvases.forEach(function (item) { visibility.observe(item.canvas); });
+  }
   players.forEach(function (player, index) {
     ['loadeddata', 'canplay', 'playing', 'pause', 'seeked', 'error'].forEach(function (event) {
       player.video.addEventListener(event, function () {
@@ -58,6 +92,7 @@
     if (now - lastDraw < 40) { scheduleDraw(); return; }
     lastDraw = now;
     canvases.forEach(function (item, index) {
+      if (!onScreen[index]) return;
       const w = item.canvas.width, h = item.canvas.height;
       if (w < 1 || h < 1) return;
       const player = players[index], time = player.video.currentTime;
@@ -69,7 +104,8 @@
       videoStatus[index].hidden = item.hasFrame;
       if (!item.hasFrame) videoStatus[index].textContent = player.error ? 'Video unavailable' : 'Loading video';
     });
-    if (settings.motion && players.some(function (player) { return player.ready && !player.video.paused && !player.video.ended; })) scheduleDraw();
+    if (settings.motion && players.some(function (player, index) { return onScreen[index] && player.ready && !player.video.paused && !player.video.ended; })) scheduleDraw();
   }
   resize(); applySettings();
+  }
 })();

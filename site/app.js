@@ -1,7 +1,7 @@
 import { FACTIONS, REGIONS, CARDS, createGame, getLegalActions, applyAction, getStandings, chooseAIAction, deserializeGame } from './game/engine.js';
 import { GameRoom } from './room.js';
 import { COURT, THEMES, normalizeTheme, factionMeta, regionTitle, factionTitle, cardTitle, cardDescription, translate, emblem } from './presentation.js';
-import { createExperience } from './experience.js';
+import { createExperience, portraitPicture } from './experience.js';
 import { getTurnGuidance } from './guidance.js';
 import { createTurnFeedback } from './turn-feedback.js';
 import { createGameLibrary } from './game-library.js';
@@ -31,8 +31,8 @@ import { createGameLibrary } from './game-library.js';
   function words(value) { return translate(theme,value); }
   function personalSeat() { return mode==='online' ? localSeat : mode==='solo' ? 0 : null; }
   function characterFor(i) { return roomLobby?.seats[i]?.character ?? characters[i] ?? i%4; }
-  function portrait(i) { const p=COURT[characterFor(i)];return `<span class="portrait" style="--court:${p.color}"><img src="/assets/portraits/${p.image}.png" alt="" width="80" height="80"><span class="avatar" title="Seat ${i+1}">${i+1}</span></span>`; }
-  function characterPicker(id, chosen, disabled=false) { return `<fieldset class="character-picker" id="${id}" ${disabled?'disabled':''}><legend>Choose your character <small>Appearance only</small></legend><div>${COURT.map((p,i)=>`<label><input type="radio" name="${id}" value="${i}" ${chosen===i?'checked':''}><img src="/assets/portraits/${p.image}.png" alt=""><strong>${escape(p.name)}</strong><small>${escape(p.role)}</small></label>`).join('')}</div></fieldset>`; }
+  function portrait(i) { const p=COURT[characterFor(i)];return `<span class="portrait" style="--court:${p.color}">${portraitPicture(p.image,{size:62})}<span class="avatar" title="Seat ${i+1}">${i+1}</span></span>`; }
+  function characterPicker(id, chosen, disabled=false) { return `<fieldset class="character-picker" id="${id}" ${disabled?'disabled':''}><legend>Choose your character <small>Appearance only</small></legend><div>${COURT.map((p,i)=>`<label><input type="radio" name="${id}" value="${i}" ${chosen===i?'checked':''}>${portraitPicture(p.image,{size:55,lazy:true})}<strong>${escape(p.name)}</strong><small>${escape(p.role)}</small></label>`).join('')}</div></fieldset>`; }
   function legal() {
     if(actionCache.revision !== game.revision || actionCache.state !== game) actionCache={revision:game.revision,state:game,actions:getLegalActions(game)};
     return actionCache.actions;

@@ -31,3 +31,7 @@ They are not recordings of the projects. The Toga clip depicts a sculpture, with
 All clips are used under the Pexels license, which permits free website use and modification: https://www.pexels.com/license/
 
 The Toga and Quran Art browser copies are silent H.264, at most 9 seconds, 960 pixels wide and 24 fps. The card renderer applies black-and-white ordered dithering at runtime, with occasional sparse red accents.
+
+## Delivery encodes
+
+The browser assets `toga`, `quran` and `coming` (`.mp4` H.264 and `.webm` VP9) are grayscale, audio-free re-encodes of the processed originals kept in `assets-src/projects/`, at the same resolution and 24 fps. Regenerate with `python scripts/optimize-media.py videos`. The dither reads luminance only, so dropping chroma does not change the rendered cards.
