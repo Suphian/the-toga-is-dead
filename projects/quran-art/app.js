@@ -8,6 +8,8 @@
       buttons.forEach(other => other.setAttribute('aria-pressed', String(other === button)));
       cards.forEach(card => {
         const img = card.querySelector('img');
+        const source = card.querySelector('source');
+        if (source) source.srcset = `/quran/thumbs/${card.dataset.id}-${button.dataset.kind}.webp`;
         img.src = `/quran/thumbs/${card.dataset.id}-${button.dataset.kind}.png`;
         img.alt = `${card.dataset.name}: ${button.textContent.trim()}`;
       });
