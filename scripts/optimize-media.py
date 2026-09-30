@@ -57,14 +57,11 @@ def panorama():
 
 
 def cover():
-    # PNG keeps its path: head tags still reference /assets/toga-cover.png (retained temporarily).
-    # toga-cover.jpg (1200x629, q85, ~200 KB) is the Open Graph image going forward.
+    # toga-cover.jpg (1200x629, q85, ~200 KB) is the Open Graph/Twitter/JSON-LD image.
+    # The interim 64-colour site/assets/toga-cover.png was deleted once nothing referenced it.
     src = Image.open(SRC / "toga-cover.png").convert("RGB")
-    # 1200 px wide (same 1732:908 aspect) and a 64-colour palette get it under the 300 KB budget.
-    im = resize(src, 1200).quantize(colors=64, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.FLOYDSTEINBERG)
-    save(im, OUT / "toga-cover.png", optimize=True)
-    # Lossy JPEG replacement (PNG above stays until its last reference is removed).
-    # Quality steps down from 85 until the file fits the 300,000 B budget.
+    # 1200 px wide (same 1732:908 aspect). Quality steps down from 85 until the file fits
+    # the 300,000 B budget.
     jpg = OUT / "toga-cover.jpg"
     for q in (85, 80, 78):
         save(resize(src, 1200), jpg, quality=q, optimize=True, progressive=True)
