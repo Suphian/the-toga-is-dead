@@ -143,12 +143,12 @@ A looping film of ink blooming in water.
 
 ### Suph.app
 
-From `README.md` in the suph.app repository at commit 1fa0c9c.
+From `README.md` in the suph.app repository.
 
 A minimal project gallery at [suph.app](https://suph.app), with three black-and-white dither cards rendered from real, muted video. The homepage contains only the wordmark and project names. Playback respects reduced motion and pauses in hidden tabs. Video sources and licenses are recorded in SOURCES.md.
 
 - **[The Toga Is Dead](https://suph.app/Toga)**: the existing browser game, now at `/Toga`.
-- **[Quran Art](https://suph.app/quran)**: three mathematical artworks for each of the 114 surahs, with a visual gallery, linked verse highlighting, explanations, and SVG downloads. See its sources and method.
+- **[Quran Art](https://suph.app/quran)**: three mathematical artworks for each of the 114 surahs (Verse Shell, Word Current, and Verse Lines), with a visual gallery, linked verse highlighting, explanations, and SVG downloads. See its sources and method.
 - **Coming soon**: a looping film of ink blooming in water.
 
 Old root invitations with `?room=` and theme links still open Toga with their query and fragment intact. Game modules remain at their original root paths, and same-origin saved games keep their existing storage keys.
@@ -179,7 +179,7 @@ cd the-toga-is-dead
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000** for the gallery, **/Toga** for the game, and **/quran** for Quran Art. The static site needs no npm installation or build step. Initial game loading needs an internet connection for pinned browser libraries and web fonts. Refresh after editing files.
+Open **http://127.0.0.1:3000** for the gallery, **/Toga** for the game, and **/quran** for Quran Art. The static site needs no npm installation or build step. Fonts and three.js are self-hosted; only PeerJS (from esm.sh, for online rooms) and the PostHog proxy are external. Refresh after editing files.
 
 `npm test` runs the dependency-free engine, room transport, and audio lifecycle tests. The development server uses Node built-ins and serves only `site/`.
 
@@ -221,7 +221,9 @@ For local-network testing, set `HOST=0.0.0.0` and optionally `PORT` before start
 
 #### Deployment and online rooms
 
-The Vercel project is **ceoisdead** in team **suph**, with production domain **suph.app**. `vercel.json` publishes `site/` without install or build commands. Git integration supplies production updates from `main` and branch previews for reviewing changes. The Netlify configuration remains as an alternative static-host setup.
+The Vercel project is **ceoisdead** in team **suph**, with production domain **suph.app**. `vercel.json` publishes `site/` without install or build commands. Production is deployed by running `vercel --prod` from the `quran-art-publish` worktree (branch `feat/quran-one-rule`), not by Git integration from `main`. The Netlify configuration remains as an alternative static-host setup.
+
+Caching (`vercel.json` headers, last match wins): site JS and CSS are `public, max-age=0, must-revalidate` because the modules import each other by plain, unversioned paths; `/vendor/`, `/fonts/`, `/assets/` and `/quran/(thumbs|artworks)/` are cached for 30 days with 7 days of stale-while-revalidate, so replaced files there need a new path. In particular, a three.js upgrade (r180 today) must move `/vendor/three/` to a new path and update the import map and modulepreloads in `site/Toga/index.html`.
 
 Rooms use PeerJS/WebRTC. Up to three guests connect to the host, which validates seat ownership, state revision, and legal moves before broadcasting updates. Seats freeze when the match starts; any disconnect pauses everyone. Guests can refresh or resume from **My games**. Their private seat token is stored with the game on this browser and is never included in the shared link or public lobby.
 
@@ -229,7 +231,11 @@ Host snapshots preserve the game, original invitation ID, player choices, and re
 
 #### Project map
 
+suph.app sends product analytics and error tracking to PostHog through the same-origin `/ingest` proxy; it sets no cookies beyond PostHog's own and only loads on the production host.
+
 - `site/index.html`, `site/projects/`: minimal gallery and video dither renderer.
+- `site/projects/ph.js`: PostHog loader and `suphTrack`; host-gated to suph.app, `api_host: '/ingest'`, with autocapture, heatmaps, dead clicks, surveys and session recording pinned off in `posthog.init`. Toga room ids are kept out in two layers: the SDK masks `room` and `theme` query values as `<masked>` (`mask_personal_data_properties` + `custom_personal_data_properties`; this covers `$current_url`, the nested web-vitals URLs and heatmap keys, and also masks ad click ids such as `gclid`), then `before_send` walks the whole event (nested objects and arrays, 8 levels) and removes the `room` and `theme` parameters from every URL on suph.app, from every `*url*`/`*referrer*` property, and from URL-shaped object keys. Other query parameters are kept.
+- `site/fonts/`, `site/vendor/three/`: self-hosted web fonts and the three.js build.
 - `site/Toga/index.html`: game metadata, styles, and pinned browser imports.
 - `site/quran/` and `site/surah/`: Quran Art gallery, named surah pages, and artwork exports.
 - `site/app.js`: game interface, saves, turn orchestration, and room integration.
@@ -256,7 +262,7 @@ CI checks JavaScript syntax, runs Node tests, and runs the browser verification 
 
 #### Quran Art
 
-The Quran gallery lives at `/quran`, with a page for each surah at `/surah/{name}` (for example `/surah/al-fajr`). Each page compares Verse Shell, Word Current, and Verse Lines, with linked verse highlighting, expandable mathematics, and SVG downloads. All 114 surahs and 342 artworks are included.
+The Quran gallery lives at `/quran`, with a page for each surah at `/surah/{name}` (for example `/surah/al-fajr`). Each page compares Verse Shell, Word Current, and Verse Lines, with one verse selector that highlights the same verse in all three, the mathematics shown with each artwork, and an SVG download for every artwork. All 114 surahs and 342 artworks are live. A one-rule redesign (Rays, Rows, and Spiral) exists in the generator source, `projects/quran-art/scripts/build_site.js`, but is unreleased pending approval; the live pages are rebuilt with `bash projects/quran-art/scripts/live-studies/build-live-studies.sh`.
 
 Source, provenance, and regeneration instructions are in `projects/quran-art/README.md`. Public output is isolated in `site/quran/` and `site/surah/`; the Toga game is unchanged.
 

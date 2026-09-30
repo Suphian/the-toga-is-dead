@@ -70,10 +70,12 @@ const quranSummary = description('quran/index.html');
 // ---- Markdown documents for llms-full.txt ----
 // Headings move down two levels to sit under "## Project documents"; repository-relative links
 // become plain text (the linked documents are included here) and site-root links become absolute.
-// The documents that describe the Quran studies are read at DOCS_REF, so llms-full.txt matches the
-// studies the site serves; the rest (and all of them when DOCS_REF is empty) come from the working tree.
+// The Quran Art README and method, which describe the studies in detail, are read at DOCS_REF so
+// llms-full.txt matches the studies the site serves. The root README.md, RULES.md and SOURCES.md
+// (and all of them when DOCS_REF is empty) come from the working tree; the root README describes the
+// live studies and marks the one-rule redesign as unreleased.
 const docsRef = process.env.DOCS_REF ?? '1fa0c9c'; // live studies; remove when one-rule ships
-const studyDocuments = new Set(['README.md', 'projects/quran-art/README.md', 'projects/quran-art/data/method.md']);
+const studyDocuments = new Set(['projects/quran-art/README.md', 'projects/quran-art/data/method.md']);
 const atRef = path => Boolean(docsRef) && studyDocuments.has(path);
 const readDocument = path => atRef(path)
   ? execFileSync('git', ['show', `${docsRef}:${path}`], { cwd: repo, encoding: 'utf8' }).replace(/\r\n/g, '\n')
