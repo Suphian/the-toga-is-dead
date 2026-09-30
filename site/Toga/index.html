@@ -31,15 +31,19 @@
   <link rel="manifest" href="/site.webmanifest">
   <link rel="author" href="/humans.txt">
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://suph.app/#website","url":"https://suph.app/","name":"Suph.app","author":{"@id":"https://suphian.com/#person"}},{"@type":"Person","@id":"https://suphian.com/#person","name":"Suphian Tweel","url":"https://suphian.com/"},{"@type":"VideoGame","@id":"https://suph.app/Toga#game","url":"https://suph.app/Toga","name":"The Toga Is Dead","description":"A kingdom without a crown. Three rival factions, eight regions, and a table for 2–4 friends. Play a beautiful 3D game of influence and succession.","image":"https://suph.app/assets/toga-cover.jpg","author":{"@id":"https://suphian.com/#person"},"inLanguage":"en","isPartOf":{"@id":"https://suph.app/#website"},"genre":"Strategy","gamePlatform":"Web browser","applicationCategory":"GameApplication","playMode":["SinglePlayer","MultiPlayer"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":2,"maxValue":4},"isAccessibleForFree":true}]}</script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" href="/fonts/cormorant-garamond-normal-latin-co3bmX5slC.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/fonts/dm-sans-normal-latin-rP2Yp2ywxg.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/projects/fonts.css">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/kingdom.css">
   <link rel="stylesheet" href="/guidance.css">
   <link rel="stylesheet" href="/turn-feedback.css">
   <style>.topbar>.suph-wordmark{font-family:Arial,Helvetica,sans-serif;font-size:19px;font-weight:600;line-height:1;letter-spacing:-.6px;color:#243f39;text-decoration:none;flex-shrink:0}.topbar>.suph-wordmark:focus-visible{outline:2px solid #a96736;outline-offset:5px}</style>
-  <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"}}</script>
+  <script type="importmap">{"imports":{"three":"/vendor/three/three.module.min.js","three/addons/":"/vendor/three/addons/"}}</script>
+  <link rel="modulepreload" href="/vendor/three/three.module.min.js" fetchpriority="low">
+  <link rel="modulepreload" href="/vendor/three/three.core.min.js" fetchpriority="low">
+  <link rel="modulepreload" href="/app.js">
+  <link rel="preload" as="image" type="image/avif" href="/assets/kingdom-panorama-1200.avif" imagesrcset="/assets/kingdom-panorama-1200.avif 1200w, /assets/kingdom-panorama-2016.avif 2016w" imagesizes="(min-width: 870px) 850px, calc(100vw - 20px)" fetchpriority="high">
 </head>
 <body>
   <div id="app"><main class="boot-screen"><span class="eyebrow">A KINGDOM WITHOUT A CROWN</span><h1>The Toga Is Dead</h1><p>Preparing your kingdom…</p></main></div>

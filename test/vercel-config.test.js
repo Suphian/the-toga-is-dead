@@ -54,8 +54,13 @@ test('security headers are present on every path', () => {
 
 test('CSP report-only allow-list', () => {
   const csp = headerValue(allHeaders('/(.*)'), 'Content-Security-Policy-Report-Only');
-  for (const token of ['https://cdn.jsdelivr.net', 'https://esm.sh', 'https://fonts.googleapis.com', 'https://fonts.gstatic.com', 'https://0.peerjs.com', 'wss://0.peerjs.com', 'blob:', 'data:', "'unsafe-inline'", "frame-ancestors 'self'", 'report-uri /ingest/report/?token=phc_']) {
+  for (const token of ['https://esm.sh', 'https://0.peerjs.com', 'wss://0.peerjs.com', 'blob:', 'data:', "'unsafe-inline'", "frame-ancestors 'self'", 'report-uri /ingest/report/?token=phc_']) {
     assert.ok(csp.includes(token), `CSP contains ${token}`);
+  }
+
+  // Fonts and three.js are self-hosted (/fonts, /vendor/three), so these hosts stay out.
+  for (const host of ['https://cdn.jsdelivr.net', 'https://fonts.googleapis.com', 'https://fonts.gstatic.com']) {
+    assert.ok(!csp.includes(host), `CSP no longer allows ${host}`);
   }
 });
 
